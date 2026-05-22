@@ -771,35 +771,56 @@ def call_api(uid, region="BD"):
     if not uid or not uid.isdigit():
         return {"status": 0, "error": "Invalid UID format"}
     
+    # NEW API FORMAT: http://2.56.246.128:30264/like?api_key=SAIFUL1&server_name={region}&uid={uid}
     url = f"{API_BASE_URL}/like"
     params = {
         "uid": uid,
-        "server_name": region.lower(),
-        "api_key": API_KEY
+        "server_name": region.lower(),  # Keep as server_name parameter
+        "api_key": API_KEY  # Change from 'key' to 'api_key'
     }
     
     try:
         logger.info(f"Calling API for UID: {uid}, Region: {region}")
+        logger.info(f"API URL: {url}?api_key={API_KEY}&server_name={region.lower()}&uid={uid}")
         
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             'Accept': 'application/json',
         }
         
-        response = requests.get(url, params=params, headers=headers, timeout=REQUEST_TIMEOUT, verify=True)
+        # Disable SSL verification for HTTP (since it's HTTP, not HTTPS)
+        response = requests.get(url, params=params, headers=headers, timeout=REQUEST_TIMEOUT, verify=False)
         
         if response.status_code == 200:
             try:
                 data = response.json()
                 logger.info(f"API Response for UID {uid}: {data}")
+                
+                # Check if the response has a success/status field
+                # You may need to adjust based on your API's actual response format
                 if 'status' not in data:
+                    # Assume success if response has data
                     data['status'] = 1
+                    
+                # Map response fields to match your bot's expected format
+                # Adjust these based on your API's actual response structure
+                if 'PlayerNickname' not in data and 'nickname' in data:
+                    data['PlayerNickname'] = data['nickname']
+                if 'LikesGivenByAPI' not in data and 'likes_given' in data:
+                    data['LikesGivenByAPI'] = data['likes_given']
+                if 'LikesbeforeCommand' not in data and 'likes_before' in data:
+                    data['LikesbeforeCommand'] = data['likes_before']
+                if 'LikesafterCommand' not in data and 'likes_after' in data:
+                    data['LikesafterCommand'] = data['likes_after']
+                    
                 return data
             except ValueError as e:
                 logger.error(f"JSON decode error for UID {uid}: {e}")
-                return {"status": 0, "error": "Invalid JSON response"}
+                # Try to parse text response if not JSON
+                return {"status": 0, "error": f"Invalid JSON response: {str(e)}"}
         else:
             logger.error(f"HTTP error for UID {uid}: {response.status_code}")
+            logger.error(f"Response text: {response.text[:200]}")
             return {"status": 0, "error": f"HTTP Error: {response.status_code}"}
             
     except requests.exceptions.Timeout:
