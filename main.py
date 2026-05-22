@@ -34,8 +34,8 @@ TASK_GROUP_1 = int(os.getenv("TASK_GROUP_1", "-1003764299339"))
 TASK_GROUP_2 = int(os.getenv("TASK_GROUP_2", "-1003809015521"))
 TASK_GROUPS = [TASK_GROUP_1, TASK_GROUP_2]
 
-API_KEY = os.getenv("API_KEY", "RIYAD00")
-API_BASE_URL = os.getenv("API_BASE_URL", "https://riyad-like-api-ob-52.vercel.app")
+API_KEY = os.getenv("API_KEY", "SAIFUL1")
+API_BASE_URL = os.getenv("API_BASE_URL", "http://2.56.246.128:30264")
 
 # Supported Regions
 SUPPORTED_REGIONS = ["ME", "ID", "TH", "VN", "SG", "BD", "PK", "MY", "PH", "RU", "AFR"]
