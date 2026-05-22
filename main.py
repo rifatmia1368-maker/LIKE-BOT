@@ -18,7 +18,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 load_dotenv()
 
 # ================= CONFIG =================
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8488122911:AAHU6tmSSGDA5KWCuiCE0hDyS6bcuHapgUY")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8926868360:AAGb9kvjfxrdbritVWvYTC7m751lKU6Hg0c")
 OWNER_ID = int(os.getenv("OWNER_ID", "7603719412"))
 DAILY_LIMIT = int(os.getenv("DAILY_LIMIT", "2"))
 GROUP_DAILY_LIMIT = int(os.getenv("GROUP_DAILY_LIMIT", "50"))
