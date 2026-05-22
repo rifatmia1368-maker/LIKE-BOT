@@ -1,0 +1,25 @@
+{
+  "messages": [
+    {
+      "id": 1773540191,
+      "text": "hi evryone",
+      "sender_id": 1087968824,
+      "sender_name": "Group",
+      "time": "2026-03-15T04:03:11.519585",
+      "status": "pending"
+    },
+    {
+      "id": 1773540256,
+      "text": "HI EVRYONE",
+      "sender_id": 1087968824,
+      "sender_name": "Group",
+      "time": "2026-03-15T04:04:16.416835",
+      "status": "pending"
+    }
+  ],
+  "stats": {
+    "total": 0,
+    "sent": 0,
+    "failed": 0
+  }
+}
