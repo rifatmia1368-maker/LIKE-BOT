@@ -775,7 +775,7 @@ def call_api(uid, region="BD"):
     params = {
         "uid": uid,
         "server_name": region.lower(),
-        "key": API_KEY
+        "api_key": API_KEY
     }
     
     try:
