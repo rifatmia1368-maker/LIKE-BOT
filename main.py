@@ -34,8 +34,8 @@ TASK_GROUP_1 = int(os.getenv("TASK_GROUP_1", "-1003764299339"))
 TASK_GROUP_2 = int(os.getenv("TASK_GROUP_2", "-1003809015521"))
 TASK_GROUPS = [TASK_GROUP_1, TASK_GROUP_2]
 
-API_KEY = os.getenv("API_KEY", "RIYADAH")
-API_BASE_URL = os.getenv("API_BASE_URL", "https://riyad-like-api-ob-52.vercel.app")
+API_KEY = "SAIFUL1"  # এটা সেট করে দিন
+API_BASE_URL = "http://2.56.246.128:30264"  # পোর্ট নম্বর সহ
 
 # Supported Regions
 SUPPORTED_REGIONS = ["ME", "ID", "TH", "VN", "SG", "BD", "PK", "MY", "PH", "RU", "AFR"]
@@ -771,35 +771,44 @@ def call_api(uid, region="BD"):
     if not uid or not uid.isdigit():
         return {"status": 0, "error": "Invalid UID format"}
     
+    # আপনার দেওয়া URL ফরম্যাট অনুযায়ী
     url = f"{API_BASE_URL}/like"
     params = {
         "uid": uid,
-        "server_name": region.lower(),
-        "key": API_KEY
+        "server_name": region.lower(),  # bd, id, th ইত্যাদি
+        "api_key": API_KEY  # SAIFUL1
     }
     
     try:
         logger.info(f"Calling API for UID: {uid}, Region: {region}")
+        logger.info(f"Full URL: {url}?uid={uid}&server_name={region.lower()}&api_key={API_KEY}")
         
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             'Accept': 'application/json',
         }
         
-        response = requests.get(url, params=params, headers=headers, timeout=REQUEST_TIMEOUT, verify=True)
+        # HTTP এর জন্য verify=False দিন
+        response = requests.get(url, params=params, headers=headers, timeout=REQUEST_TIMEOUT, verify=False)
         
         if response.status_code == 200:
             try:
                 data = response.json()
                 logger.info(f"API Response for UID {uid}: {data}")
+                
+                # API যেই ফরম্যাটে ডাটা দিবে সেটা এখানে ম্যাপ করুন
+                # যদি API ঠিকমত ডাটা দেয় তাহলে status সেট করার দরকার নাও হতে পারে
                 if 'status' not in data:
-                    data['status'] = 1
+                    data['status'] = 1  # সাকসেস ধরে নিচ্ছি
+                    
                 return data
+                
             except ValueError as e:
-                logger.error(f"JSON decode error for UID {uid}: {e}")
-                return {"status": 0, "error": "Invalid JSON response"}
+                logger.error(f"JSON decode error: {e}")
+                logger.error(f"Response text: {response.text[:200]}")
+                return {"status": 0, "error": f"Invalid JSON: {str(e)}"}
         else:
-            logger.error(f"HTTP error for UID {uid}: {response.status_code}")
+            logger.error(f"HTTP Error {response.status_code}: {response.text[:200]}")
             return {"status": 0, "error": f"HTTP Error: {response.status_code}"}
             
     except requests.exceptions.Timeout:
@@ -807,23 +816,8 @@ def call_api(uid, region="BD"):
     except requests.exceptions.ConnectionError:
         return {"status": 0, "error": "Connection error"}
     except Exception as e:
-        logger.error(f"Unexpected error for UID {uid}: {e}")
+        logger.error(f"Unexpected error: {e}")
         return {"status": 0, "error": f"Error: {str(e)[:50]}"}
-
-# ================= RATE LIMITING =================
-def check_rate_limit(user_id):
-    now = time.time()
-    minute_ago = now - 60
-    
-    with lock:
-        if user_id in rate_limiter:
-            rate_limiter[user_id] = [t for t in rate_limiter[user_id] if t > minute_ago]
-            if len(rate_limiter[user_id]) >= RATE_LIMIT:
-                return False
-            rate_limiter[user_id].append(now)
-        else:
-            rate_limiter[user_id] = [now]
-    return True
 
 # ================= CHANNEL & GROUP CHECK =================
 def check_channel_membership(user_id):
