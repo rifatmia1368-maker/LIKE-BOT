@@ -773,23 +773,43 @@ def call_api(uid, region="BD"):
     if not uid or not uid.isdigit():
         return {"status": 0, "error": "Invalid UID format"}
     
-    url = f"http://2.56.246.128:30264/like?uid={uid}&server_name={region.lower()}&api_key=SAIFUL1"
+    url = f"{API_BASE_URL}/like"
+    params = {
+        "uid": uid,
+        "server_name": region.lower(),
+        "api_key": API_KEY
+    }
     
     try:
-        logger.info(f"Calling: {url}")
+        logger.info(f"Calling API for UID: {uid}, Region: {region}")
         
-        # সিম্পল GET রিকোয়েস্ট
-        response = requests.get(url, timeout=30)
+        # Timeout বেশি দিন
+        response = requests.get(
+            url, 
+            params=params, 
+            timeout=30,
+            verify=False,  # HTTP এর জন্য
+            allow_redirects=True
+        )
         
         if response.status_code == 200:
-            return response.json()
+            try:
+                data = response.json()
+                logger.info(f"API Response: {data}")
+                return data
+            except:
+                return {"status": 0, "error": "Invalid JSON response"}
         else:
             return {"status": 0, "error": f"HTTP {response.status_code}"}
             
+    except requests.exceptions.ConnectionError as e:
+        logger.error(f"Connection error: {e}")
+        return {"status": 0, "error": "Cannot connect to API server"}
+    except requests.exceptions.Timeout:
+        return {"status": 0, "error": "Request timeout"}
     except Exception as e:
         logger.error(f"Error: {e}")
         return {"status": 0, "error": str(e)[:50]}
-
 # ================= CHANNEL & GROUP CHECK =================
 def check_channel_membership(user_id):
     try:
