@@ -47,6 +47,8 @@ AUTO_LIKE_MINUTE = int(os.getenv("AUTO_LIKE_MINUTE", "0"))
 # Rate limiting
 RATE_LIMIT = 10
 REQUEST_TIMEOUT = 30
+
+lock = threading.Lock()
 # =========================================
 
 # ================= TIMEZONE CONFIG =================
@@ -929,6 +931,7 @@ def handle_callback(call):
         handle_broadcast_callback(call)
 
 # ================= HELPERS =================
+
 def get_user_type(user_id):
     if user_id == OWNER_ID:
         return "👑 OWNER"
@@ -943,6 +946,24 @@ def is_allowed(message):
     if message.from_user.id == OWNER_ID or message.from_user.id in ADMIN_USERS:
         return True
     return message.chat.id in ALLOWED_GROUP_IDS
+
+# ================= RATE LIMITING =================
+rate_limiter = {}
+
+def check_rate_limit(user_id):
+    now = time.time()
+    minute_ago = now - 60
+    
+    with lock:
+        if user_id in rate_limiter:
+            # Remove old entries
+            rate_limiter[user_id] = [t for t in rate_limiter[user_id] if t > minute_ago]
+            if len(rate_limiter[user_id]) >= RATE_LIMIT:
+                return False
+            rate_limiter[user_id].append(now)
+        else:
+            rate_limiter[user_id] = [now]
+    return True
 
 def is_unlimited(user_id):
     return user_id == OWNER_ID or user_id in ADMIN_USERS or user_id in VIP_USERS
