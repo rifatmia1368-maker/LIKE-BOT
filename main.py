@@ -34,8 +34,8 @@ TASK_GROUP_1 = int(os.getenv("TASK_GROUP_1", "-1003764299339"))
 TASK_GROUP_2 = int(os.getenv("TASK_GROUP_2", "-1003809015521"))
 TASK_GROUPS = [TASK_GROUP_1, TASK_GROUP_2]
 
-API_KEY = "SAIFUL1"  # এটা সেট করে দিন
-API_BASE_URL = "http://2.56.246.128:30264"  # পোর্ট নম্বর সহ
+API_KEY = "SAIFUL1"
+API_BASE_URL = "http://2.56.246.128:30264"
 
 # Supported Regions
 SUPPORTED_REGIONS = ["ME", "ID", "TH", "VN", "SG", "BD", "PK", "MY", "PH", "RU", "AFR"]
@@ -63,7 +63,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 bot = telebot.TeleBot(BOT_TOKEN)
-lock = threading.Lock()
 
 # ================= DATA STORAGE FILES =================
 DATA_DIR = "bot_data"
@@ -264,9 +263,6 @@ def get_remaining_days(expiry_date):
     return days_left
 
 def cleanup_expired_auto_likes():
-    """
-    Remove expired auto likes and send notification to users
-    """
     today_bd = datetime.now(BANGLADESH_TZ).date()
     removed_count = 0
     expired_notifications = {}
@@ -315,11 +311,11 @@ def cleanup_expired_auto_likes():
         logger.info(f"Removed {removed_count} expired auto likes")
         owner_msg = (
             "╭━━━━━━━━━━━━━━━✪\n"
-            "│🗑️ EXPIRED AUTO LIKES\n"
+            "│🗑️ 𝐄𝐗𝐏𝐈𝐑𝐄𝐃 𝐀𝐔𝐓𝐎 𝐋𝐈𝐊𝐄𝐒\n"
             "╰━━━━━━━━━━━━━━━✪\n\n"
-            f"📊 Total Expired: {removed_count}\n"
-            f"👤 Affected Users: {len(expired_notifications)}\n\n"
-            "✨ Auto cleanup completed! ✨"
+            f"📊 𝐓𝐨𝐭𝐚𝐥 𝐄𝐱𝐩𝐢𝐫𝐞𝐝: {removed_count}\n"
+            f"👤 𝐀𝐟𝐟𝐞𝐜𝐭𝐞𝐝 𝐔𝐬𝐞𝐫𝐬: {len(expired_notifications)}\n\n"
+            "✨ 𝐀𝐮𝐭𝐨 𝐜𝐥𝐞𝐚𝐧𝐮𝐩 𝐜𝐨𝐦𝐩𝐥𝐞𝐭𝐞𝐝! ✨"
         )
         try:
             bot.send_message(OWNER_ID, owner_msg)
@@ -329,9 +325,6 @@ def cleanup_expired_auto_likes():
     return removed_count
 
 def format_expiry_notification(expired_data):
-    """
-    Format expiry notification message for user
-    """
     uid = expired_data.get("uid")
     expiry_date = expired_data.get("expiry_date")
     region = expired_data.get("region", "BD")
@@ -339,31 +332,31 @@ def format_expiry_notification(expired_data):
     
     text = (
         "╭━━━━━━━━━━━━━━━✪\n"
-        "│⏰ AUTO LIKE EXPIRED\n"
+        "│⏰ 𝐀𝐔𝐓𝐎 𝐋𝐈𝐊𝐄 𝐄𝐗𝐏𝐈𝐑𝐄𝐃\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ ❌ EXPIRED UID ✦ ⟯\n"
-        f"│🆔 UID: {uid}\n"
-        f"│🌍 REGION: {region}\n"
-        f"│📅 ADDED: {added_date}\n"
-        f"│📆 EXPIRED ON: {expiry_date}\n"
+        "╭━⟮ ✦ ❌ 𝐄𝐗𝐏𝐈𝐑𝐄𝐃 𝐔𝐈𝐃 ✦ ⟯\n"
+        f"│🆔 𝐔𝐈𝐃: {uid}\n"
+        f"│🌍 𝐑𝐄𝐆𝐈𝐎𝐍: {region}\n"
+        f"│📅 𝐀𝐃𝐃𝐄𝐃: {added_date}\n"
+        f"│📆 𝐄𝐗𝐏𝐈𝐑𝐄𝐃 𝐎𝐍: {expiry_date}\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ 💡 RENEWAL PACKAGES ✦ ⟯\n"
-        "│⚠️ Your auto like has expired!\n"
-        "│🌟 Buy again to continue service:\n"
-        "│   • 30 Days = 30৳\n"
-        "│   • 60 Days = 50৳\n"
-        "│   • 90 Days = 70৳\n"
+        "╭━⟮ ✦ 💡 𝐑𝐄𝐍𝐄𝐖𝐀𝐋 𝐏𝐀𝐂𝐊𝐀𝐆𝐄𝐒 ✦ ⟯\n"
+        "│⚠️ 𝐘𝐨𝐮𝐫 𝐚𝐮𝐭𝐨 𝐥𝐢𝐤𝐞 𝐡𝐚𝐬 𝐞𝐱𝐩𝐢𝐫𝐞𝐝!\n"
+        "│🌟 𝐁𝐮𝐲 𝐚𝐠𝐚𝐢𝐧 𝐭𝐨 𝐜𝐨𝐧𝐭𝐢𝐧𝐮𝐞 𝐬𝐞𝐫𝐯𝐢𝐜𝐞:\n"
+        "│   • 30 𝐃𝐚𝐲𝐬 = 30৳\n"
+        "│   • 60 𝐃𝐚𝐲𝐬 = 50৳\n"
+        "│   • 90 𝐃𝐚𝐲𝐬 = 70৳\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ 📞 HOW TO BUY ✦ ⟯\n"
-        "│📲 Inbox: @riyadalhasan11\n"
-        "│💬 Send your UID and package\n"
-        "│✅ Payment: bKash/Nagad/Rocket\n"
+        "╭━⟮ ✦ 📞 𝐇𝐎𝐖 𝐓𝐎 𝐁𝐔𝐘 ✦ ⟯\n"
+        "│📲 𝐈𝐧𝐛𝐨𝐱: @riyadalhasan11\n"
+        "│💬 𝐒𝐞𝐧𝐝 𝐲𝐨𝐮𝐫 𝐔𝐈𝐃 𝐚𝐧𝐝 𝐩𝐚𝐜𝐤𝐚𝐠𝐞\n"
+        "│✅ 𝐏𝐚𝐲𝐦𝐞𝐧𝐭: 𝐛𝐊𝐚𝐬𝐡/𝐍𝐚𝐠𝐚𝐝/𝐑𝐨𝐜𝐤𝐞𝐭\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "✨ Thank you for using our service! ✨"
+        "✨ 𝐓𝐡𝐚𝐧𝐤 𝐲𝐨𝐮 𝐟𝐨𝐫 𝐮𝐬𝐢𝐧𝐠 𝐨𝐮𝐫 𝐬𝐞𝐫𝐯𝐢𝐜𝐞! ✨"
     )
     return text
 
-# ================= BOX STYLE RESPONSE FORMATTER =================
+# ================= BOX STYLE RESPONSE FORMATTER (FULL BOLD) =================
 
 def format_like_success(data, user_type="👤 FREE", used="1", total_limit="1", username=None):
     name = data.get('PlayerNickname', data.get('nickname', 'N/A'))
@@ -377,22 +370,22 @@ def format_like_success(data, user_type="👤 FREE", used="1", total_limit="1", 
     
     text = (
         "╭━━━━━━━━━━━━━━━✪\n"
-        "│💝 LIKE SENT SUCCESSFULLY ☺️\n"
+        "│💝 𝐋𝐈𝐊𝐄 𝐒𝐄𝐍𝐓 𝐒𝐔𝐂𝐂𝐄𝐒𝐒𝐅𝐔𝐋𝐋𝐘 ☺️\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ 👤 ᴘʟᴀʏᴇʀ ɪɴꜰᴏ ✦ ⟯\n"
-        f"│👤 𝐍𝐀𝐌𝐄 :{name}\n"
-        f"│🆔 𝐔𝐈𝐃  : {uid}\n"
+        "╭━⟮ ✦ 👤 𝐏𝐋𝐀𝐘𝐄𝐑 𝐈𝐍𝐅𝐎 ✦ ⟯\n"
+        f"│👤 𝐍𝐀𝐌𝐄 : {name}\n"
+        f"│🆔 𝐔𝐈𝐃 : {uid}\n"
         f"│🌍 𝐒𝐄𝐑𝐕𝐄𝐑 : {region}\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ ❤️ ʟɪᴋᴇ ᴅᴇᴛᴀɪʟs ✦ ⟯\n"
-        f"│➕𝐋𝐈𝐊𝐄𝐒 𝐀𝐃𝐃𝐄𝐃: {likes_given}\n"
-        f"│🤡𝐋𝐈𝐊𝐄𝐒 𝐁𝐄𝐅𝐎𝐑𝐄: {likes_before}\n"
-        f"│🗿𝐋𝐈𝐊𝐄𝐒 𝐀𝐅𝐓𝐄𝐑 : {likes_after}\n"
+        "╭━⟮ ✦ ❤️ 𝐋𝐈𝐊𝐄 𝐃𝐄𝐓𝐀𝐈𝐋𝐒 ✦ ⟯\n"
+        f"│➕ 𝐋𝐈𝐊𝐄𝐒 𝐀𝐃𝐃𝐄𝐃 : {likes_given}\n"
+        f"│🤡 𝐋𝐈𝐊𝐄𝐒 𝐁𝐄𝐅𝐎𝐑𝐄 : {likes_before}\n"
+        f"│🗿 𝐋𝐈𝐊𝐄𝐒 𝐀𝐅𝐓𝐄𝐑 : {likes_after}\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "✨ Thank you for using our service! ✨\n\n"
-        "╭━⟮ ✦ 🧾 DETAILS ✦ ⟯\n"
-        f"│♻️ 𝐑𝐄𝐌𝐀𝐈𝐍𝐒: ({used}/{total_limit})\n"
-        f"│🙋🏻𝐔𝐒𝐄𝐑: {user_display}\n"
+        "✨ 𝐓𝐡𝐚𝐧𝐤 𝐲𝐨𝐮 𝐟𝐨𝐫 𝐮𝐬𝐢𝐧𝐠 𝐨𝐮𝐫 𝐬𝐞𝐫𝐯𝐢𝐜𝐞! ✨\n\n"
+        "╭━⟮ ✦ 🧾 𝐃𝐄𝐓𝐀𝐈𝐋𝐒 ✦ ⟯\n"
+        f"│♻️ 𝐑𝐄𝐌𝐀𝐈𝐍𝐒 : ({used}/{total_limit})\n"
+        f"│🙋🏻 𝐔𝐒𝐄𝐑 : {user_display}\n"
         "╰━━━━━━━━━━━━━━━✪"
     )
     return text
@@ -408,21 +401,21 @@ def format_max_reached(data, username=None):
     
     text = (
         "╭━━━━━━━━━━━━━━━✪\n"
-        "│𝐌𝐚𝐱 𝐋𝐢𝐤𝐞𝐬 𝐑𝐞𝐚𝐜𝐡𝐞𝐝 !\n"
+        "│⚠️ 𝐌𝐀𝐗 𝐋𝐈𝐊𝐄𝐒 𝐑𝐄𝐀𝐂𝐇𝐄𝐃 ❌\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ 👤 ᴘʟᴀʏᴇʀ ɪɴꜰᴏ ✦ ⟯\n"
+        "╭━⟮ ✦ 👤 𝐏𝐋𝐀𝐘𝐄𝐑 𝐈𝐍𝐅𝐎 ✦ ⟯\n"
         f"│👤 𝐍𝐀𝐌𝐄 : {name}\n"
         f"│🆔 𝐔𝐈𝐃 : {uid}\n"
         f"│🌍 𝐒𝐄𝐑𝐕𝐄𝐑 : {region}\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ ❤️ ʟɪᴋᴇ ᴅᴇᴛᴀɪʟs ✦ ⟯\n"
-        f"│🤡 𝐋𝐈𝐊𝐄𝐒 𝐁𝐄𝐅𝐎𝐑𝐄: {likes_before}\n"
+        "╭━⟮ ✦ ❤️ 𝐋𝐈𝐊𝐄 𝐃𝐄𝐓𝐀𝐈𝐋𝐒 ✦ ⟯\n"
+        f"│🤡 𝐋𝐈𝐊𝐄𝐒 𝐁𝐄𝐅𝐎𝐑𝐄 : {likes_before}\n"
         f"│🗿 𝐋𝐈𝐊𝐄𝐒 𝐀𝐅𝐓𝐄𝐑 : {likes_after}\n"
-        f"│📊 𝐒𝐓𝐀𝐓𝐔𝐒: 𝐌𝐚𝐱 𝐋𝐢𝐤𝐞𝐬 𝐑𝐞𝐚𝐜𝐡𝐞𝐝\n"
+        f"│📊 𝐒𝐓𝐀𝐓𝐔𝐒 : 𝐌𝐀𝐗 𝐑𝐄𝐀𝐂𝐇𝐄𝐃\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "✨ Thank you for using our service! ✨\n\n"
-        "╭━⟮ ✦ 🧾 DETAILS ✦ ⟯\n"      
-        f"│🙋🏻𝐔𝐒𝐄𝐑: {user_display}\n"
+        "✨ 𝐓𝐡𝐚𝐧𝐤 𝐲𝐨𝐮 𝐟𝐨𝐫 𝐮𝐬𝐢𝐧𝐠 𝐨𝐮𝐫 𝐬𝐞𝐫𝐯𝐢𝐜𝐞! ✨\n\n"
+        "╭━⟮ ✦ 🧾 𝐃𝐄𝐓𝐀𝐈𝐋𝐒 ✦ ⟯\n"      
+        f"│🙋🏻 𝐔𝐒𝐄𝐑 : {user_display}\n"
         "╰━━━━━━━━━━━━━━━✪"
     )
     return text
@@ -434,13 +427,13 @@ def format_error(uid, error_msg, username=None):
         "╭━━━━━━━━━━━━━━━✪\n"
         "│❌ 𝐄𝐑𝐑𝐎𝐑 𝐎𝐂𝐂𝐔𝐑𝐑𝐄𝐃 ⚠️\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ ❌ ERROR DETAILS ✦ ⟯\n"
-        f"│🆔 𝐔𝐈𝐃: {uid}\n"
-        f"│⚠️ 𝐄𝐑𝐑𝐎𝐑: {error_msg[:50]}\n"
+        "╭━⟮ ✦ ❌ 𝐄𝐑𝐑𝐎𝐑 𝐃𝐄𝐓𝐀𝐈𝐋𝐒 ✦ ⟯\n"
+        f"│🆔 𝐔𝐈𝐃 : {uid}\n"
+        f"│⚠️ 𝐄𝐑𝐑𝐎𝐑 : {error_msg[:50]}\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "✨ Please try again later! ✨\n\n"
-        "╭━⟮ ✦ 🧾 DETAILS ✦ ⟯\n"
-        f"│🙋🏻𝐔𝐒𝐄𝐑: {user_display}\n"
+        "✨ 𝐏𝐥𝐞𝐚𝐬𝐞 𝐭𝐫𝐲 𝐚𝐠𝐚𝐢𝐧 𝐥𝐚𝐭𝐞𝐫! ✨\n\n"
+        "╭━⟮ ✦ 🧾 𝐃𝐄𝐓𝐀𝐈𝐋𝐒 ✦ ⟯\n"
+        f"│🙋🏻 𝐔𝐒𝐄𝐑 : {user_display}\n"
         "╰━━━━━━━━━━━━━━━✪"
     )
     return text
@@ -453,42 +446,42 @@ def format_start(user_name, user_type, daily_limit, group_limit, auto_hour, auto
     time_str = f"{display_hour}:{auto_min:02d} {time_suffix}"
     
     user_display = username if username else user_name
-    system_status_text = "🟢 ON" if system_status else "🔴 OFF"
+    system_status_text = "🟢 𝐎𝐍" if system_status else "🔴 𝐎𝐅𝐅"
     regions_str = ", ".join(SUPPORTED_REGIONS)
     
     text = (
         "╭━━━━━━━━━━━━━━━✪\n"
-        "│🤖 RIYAD OB52 LIKE BOT\n"
+        "│🤖 𝐑𝐈𝐘𝐀𝐃 𝐎𝐁𝟓𝟐 𝐋𝐈𝐊𝐄 𝐁𝐎𝐓\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ 👤 USER INFO ✦ ⟯\n"
-        f"│👤 NAME: {user_name}\n"
-        f"│👑 STATUS: {user_type}\n"
+        "╭━⟮ ✦ 👤 𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎 ✦ ⟯\n"
+        f"│👤 𝐍𝐀𝐌𝐄 : {user_name}\n"
+        f"│👑 𝐒𝐓𝐀𝐓𝐔𝐒 : {user_type}\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ 📋 COMMANDS ✦ ⟯\n"
-        "│• /like <region> <UID> – SEND LIKE\n"
-        "│• /remain – DAILY LIMIT\n"
-        "│• /myid – YOUR ID\n"
-        "│• /status – BOT STATUS\n"
-        "│• /myauto – YOUR AUTO LIKES\n"
-        "│• /regions – SUPPORTED REGIONS\n"
-        "│• /help – HELP MENU\n"
+        "╭━⟮ ✦ 📋 𝐂𝐎𝐌𝐌𝐀𝐍𝐃𝐒 ✦ ⟯\n"
+        "│• /like <region> <UID> – 𝐒𝐄𝐍𝐃 𝐋𝐈𝐊𝐄\n"
+        "│• /remain – 𝐃𝐀𝐈𝐋𝐘 𝐋𝐈𝐌𝐈𝐓\n"
+        "│• /myid – 𝐘𝐎𝐔𝐑 𝐈𝐃\n"
+        "│• /status – 𝐁𝐎𝐓 𝐒𝐓𝐀𝐓𝐔𝐒\n"
+        "│• /myauto – 𝐘𝐎𝐔𝐑 𝐀𝐔𝐓𝐎 𝐋𝐈𝐊𝐄𝐒\n"
+        "│• /regions – 𝐒𝐔𝐏𝐏𝐎𝐑𝐓𝐄𝐃 𝐑𝐄𝐆𝐈𝐎𝐍𝐒\n"
+        "│• /help – 𝐇𝐄𝐋𝐏 𝐌𝐄𝐍𝐔\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ ⚙️ LIMITS ✦ ⟯\n"
-        f"│📊 USER: {daily_limit}/DAY\n"
-        f"│👥 GROUP: {group_limit}/DAY\n"
-        f"│⏰ AUTO: {time_str} (BDT)\n"
-        f"│🔘 SYSTEM: {system_status_text}\n"
-        f"│🌍 REGIONS: {regions_str}\n"
+        "╭━⟮ ✦ ⚙️ 𝐋𝐈𝐌𝐈𝐓𝐒 ✦ ⟯\n"
+        f"│📊 𝐔𝐒𝐄𝐑 : {daily_limit}/𝐃𝐀𝐘\n"
+        f"│👥 𝐆𝐑𝐎𝐔𝐏 : {group_limit}/𝐃𝐀𝐘\n"
+        f"│⏰ 𝐀𝐔𝐓𝐎 : {time_str} (𝐁𝐃𝐓)\n"
+        f"│🔘 𝐒𝐘𝐒𝐓𝐄𝐌 : {system_status_text}\n"
+        f"│🌍 𝐑𝐄𝐆𝐈𝐎𝐍𝐒 : {regions_str}\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ 📢 REQUIRED TO JOIN ✦ ⟯\n"
-        f"│📢 CHANNEL: {CHANNEL_USERNAME}\n"
-        f"│👥 GROUP: {REQUIRED_GROUP_USERNAME}\n"
+        "╭━⟮ ✦ 📢 𝐑𝐄𝐐𝐔𝐈𝐑𝐄𝐃 𝐓𝐎 𝐉𝐎𝐈𝐍 ✦ ⟯\n"
+        f"│📢 𝐂𝐇𝐀𝐍𝐍𝐄𝐋 : {CHANNEL_USERNAME}\n"
+        f"│👥 𝐆𝐑𝐎𝐔𝐏 : {REQUIRED_GROUP_USERNAME}\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "✨ Thank you for using our service! ✨\n\n"
-        "╭━⟮ ✦ 🧾 DETAILS ✦ ⟯\n"
-        "│👑 OWNER: @riyadalhasan11\n"
-        "│🔰 EXAMPLE: /like BD 123456789\n"
-        f"│🙋🏻User: {user_display}\n"
+        "✨ 𝐓𝐡𝐚𝐧𝐤 𝐲𝐨𝐮 𝐟𝐨𝐫 𝐮𝐬𝐢𝐧𝐠 𝐨𝐮𝐫 𝐬𝐞𝐫𝐯𝐢𝐜𝐞! ✨\n\n"
+        "╭━⟮ ✦ 🧾 𝐃𝐄𝐓𝐀𝐈𝐋𝐒 ✦ ⟯\n"
+        "│👑 𝐎𝐖𝐍𝐄𝐑 : @riyadalhasan11\n"
+        "│🔰 𝐄𝐗𝐀𝐌𝐏𝐋𝐄 : /like BD 123456789\n"
+        f"│🙋🏻 𝐔𝐒𝐄𝐑 : {user_display}\n"
         "╰━━━━━━━━━━━━━━━✪"
     )
     return text
@@ -498,20 +491,20 @@ def format_remain(user_name, user_type, used, total, group_info="", username=Non
     
     text = (
         "╭━━━━━━━━━━━━━━━✪\n"
-        "│📊 DAILY STATUS\n"
+        "│📊 𝐃𝐀𝐈𝐋𝐘 𝐒𝐓𝐀𝐓𝐔𝐒\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ 👤 USER INFO ✦ ⟯\n"
-        f"│👤 NAME: {user_name}\n"
-        f"│👑 STATUS: {user_type}\n"
+        "╭━⟮ ✦ 👤 𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎 ✦ ⟯\n"
+        f"│👤 𝐍𝐀𝐌𝐄 : {user_name}\n"
+        f"│👑 𝐒𝐓𝐀𝐓𝐔𝐒 : {user_type}\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ 📊 LIMIT DETAILS ✦ ⟯\n"
-        f"│✅ USED: {used}/{total}\n"
-        f"│⏳ LEFT: {max(0, total - used) if isinstance(used, int) else '∞'}\n"
+        "╭━⟮ ✦ 📊 𝐋𝐈𝐌𝐈𝐓 𝐃𝐄𝐓𝐀𝐈𝐋𝐒 ✦ ⟯\n"
+        f"│✅ 𝐔𝐒𝐄𝐃 : {used}/{total}\n"
+        f"│⏳ 𝐋𝐄𝐅𝐓 : {max(0, total - used) if isinstance(used, int) else '∞'}\n"
         f"{group_info}"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "✨ Thank you for using our service! ✨\n\n"
-        "╭━⟮ ✦ 🧾 DETAILS ✦ ⟯\n"
-        f"│🙋🏻User: {user_display}\n"
+        "✨ 𝐓𝐡𝐚𝐧𝐤 𝐲𝐨𝐮 𝐟𝐨𝐫 𝐮𝐬𝐢𝐧𝐠 𝐨𝐮𝐫 𝐬𝐞𝐫𝐯𝐢𝐜𝐞! ✨\n\n"
+        "╭━⟮ ✦ 🧾 𝐃𝐄𝐓𝐀𝐈𝐋𝐒 ✦ ⟯\n"
+        f"│🙋🏻 𝐔𝐒𝐄𝐑 : {user_display}\n"
         "╰━━━━━━━━━━━━━━━✪"
     )
     return text
@@ -521,16 +514,16 @@ def format_myid(user_id, user_name, user_type, username=None):
     
     text = (
         "╭━━━━━━━━━━━━━━━✪\n"
-        "│🆔 YOUR INFORMATION\n"
+        "│🆔 𝐘𝐎𝐔𝐑 𝐈𝐍𝐅𝐎𝐑𝐌𝐀𝐓𝐈𝐎𝐍\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ 👤 USER INFO ✦ ⟯\n"
-        f"│🆔 𝐈𝐃: {user_id}\n"
-        f"│📛 𝐍𝐀𝐌𝐄: {user_name}\n"
-        f"│👑 𝐒𝐓𝐀𝐓𝐔𝐒: {user_type}\n"
+        "╭━⟮ ✦ 👤 𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎 ✦ ⟯\n"
+        f"│🆔 𝐈𝐃 : {user_id}\n"
+        f"│📛 𝐍𝐀𝐌𝐄 : {user_name}\n"
+        f"│👑 𝐒𝐓𝐀𝐓𝐔𝐒 : {user_type}\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "✨ Thank you for using our service! ✨\n\n"
-        "╭━⟮ ✦ 🧾 DETAILS ✦ ⟯\n"
-        f"│🙋🏻𝐔𝐒𝐄𝐑: {user_display}\n"
+        "✨ 𝐓𝐡𝐚𝐧𝐤 𝐲𝐨𝐮 𝐟𝐨𝐫 𝐮𝐬𝐢𝐧𝐠 𝐨𝐮𝐫 𝐬𝐞𝐫𝐯𝐢𝐜𝐞! ✨\n\n"
+        "╭━⟮ ✦ 🧾 𝐃𝐄𝐓𝐀𝐈𝐋𝐒 ✦ ⟯\n"
+        f"│🙋🏻 𝐔𝐒𝐄𝐑 : {user_display}\n"
         "╰━━━━━━━━━━━━━━━✪"
     )
     return text
@@ -540,89 +533,89 @@ def format_processing(uid, region, user_type):
         "╭━━━━━━━━━━━━━━━✪\n"
         "│⏳ 𝐏𝐑𝐎𝐂𝐄𝐒𝐒𝐈𝐍𝐆...\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ 👤 REQUEST INFO ✦ ⟯\n"
-        f"│👤 STATUS: {user_type}\n"
-        f"│🆔 UID: {uid}\n"
-        f"│🌍 REGION: {region.upper()}\n"
+        "╭━⟮ ✦ 👤 𝐑𝐄𝐐𝐔𝐄𝐒𝐓 𝐈𝐍𝐅𝐎 ✦ ⟯\n"
+        f"│👤 𝐒𝐓𝐀𝐓𝐔𝐒 : {user_type}\n"
+        f"│🆔 𝐔𝐈𝐃 : {uid}\n"
+        f"│🌍 𝐑𝐄𝐆𝐈𝐎𝐍 : {region.upper()}\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "✨ Please wait... ✨\n\n"
-        "╭━⟮ ✦ 🧾 DETAILS ✦ ⟯\n"
-        "│🙋🏻User: Processing\n"
+        "✨ 𝐏𝐥𝐞𝐚𝐬𝐞 𝐰𝐚𝐢𝐭... ✨\n\n"
+        "╭━⟮ ✦ 🧾 𝐃𝐄𝐓𝐀𝐈𝐋𝐒 ✦ ⟯\n"
+        "│🙋🏻 𝐔𝐒𝐄𝐑 : 𝐏𝐫𝐨𝐜𝐞𝐬𝐬𝐢𝐧𝐠\n"
         "╰━━━━━━━━━━━━━━━✪"
     )
     return text
 
 def format_auto_time_changed(old_hour, old_min, new_hour, new_min, username=None):
-    old_suffix = "AM" if old_hour < 12 else "PM"
+    old_suffix = "𝐀𝐌" if old_hour < 12 else "𝐏𝐌"
     old_display = old_hour if old_hour <= 12 else old_hour - 12
     if old_display == 0:
         old_display = 12
     old_time = f"{old_display}:{old_min:02d} {old_suffix}"
     
-    new_suffix = "AM" if new_hour < 12 else "PM"
+    new_suffix = "𝐀𝐌" if new_hour < 12 else "𝐏𝐌"
     new_display = new_hour if new_hour <= 12 else new_hour - 12
     if new_display == 0:
         new_display = 12
     new_time = f"{new_display}:{new_min:02d} {new_suffix}"
     
-    user_display = username if username else "Owner"
+    user_display = username if username else "𝐎𝐰𝐧𝐞𝐫"
     
     text = (
         "╭━━━━━━━━━━━━━━━✪\n"
-        "│⏰ AUTO TIME UPDATED\n"
+        "│⏰ 𝐀𝐔𝐓𝐎 𝐓𝐈𝐌𝐄 𝐔𝐏𝐃𝐀𝐓𝐄𝐃\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ ⏰ TIME CHANGE ✦ ⟯\n"
-        f"│📊 OLD: {old_time}\n"
-        f"│📊 NEW: {new_time} (BDT)\n"
+        "╭━⟮ ✦ ⏰ 𝐓𝐈𝐌𝐄 𝐂𝐇𝐀𝐍𝐆𝐄 ✦ ⟯\n"
+        f"│📊 𝐎𝐋𝐃 : {old_time}\n"
+        f"│📊 𝐍𝐄𝐖 : {new_time} (𝐁𝐃𝐓)\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "✨ Auto like will run at this time daily! ✨\n\n"
-        "╭━⟮ ✦ 🧾 DETAILS ✦ ⟯\n"
-        f"│🙋🏻User: {user_display}\n"
+        "✨ 𝐀𝐮𝐭𝐨 𝐥𝐢𝐤𝐞 𝐰𝐢𝐥𝐥 𝐫𝐮𝐧 𝐚𝐭 𝐭𝐡𝐢𝐬 𝐭𝐢𝐦𝐞 𝐝𝐚𝐢𝐥𝐲! ✨\n\n"
+        "╭━⟮ ✦ 🧾 𝐃𝐄𝐓𝐀𝐈𝐋𝐒 ✦ ⟯\n"
+        f"│🙋🏻 𝐔𝐒𝐄𝐑 : {user_display}\n"
         "╰━━━━━━━━━━━━━━━✪"
     )
     return text
 
 def format_system_status(user_type, status_on):
-    status_text = "🟢 ON" if status_on else "🔴 OFF"
-    action = "TURNED ON" if status_on else "TURNED OFF"
+    status_text = "🟢 𝐎𝐍" if status_on else "🔴 𝐎𝐅𝐅"
+    action = "𝐓𝐔𝐑𝐍𝐄𝐃 𝐎𝐍" if status_on else "𝐓𝐔𝐑𝐍𝐄𝐃 𝐎𝐅𝐅"
     
     text = (
         "╭━━━━━━━━━━━━━━━✪\n"
-        f"│⚙️ LIKE SYSTEM {action}\n"
+        f"│⚙️ 𝐋𝐈𝐊𝐄 𝐒𝐘𝐒𝐓𝐄𝐌 {action}\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ 📊 STATUS ✦ ⟯\n"
-        f"│👑 BY: {user_type}\n"
-        f"│🔘 SYSTEM: {status_text}\n"
+        "╭━⟮ ✦ 📊 𝐒𝐓𝐀𝐓𝐔𝐒 ✦ ⟯\n"
+        f"│👑 𝐁𝐘 : {user_type}\n"
+        f"│🔘 𝐒𝐘𝐒𝐓𝐄𝐌 : {status_text}\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "✨ System updated successfully! ✨"
+        "✨ 𝐒𝐲𝐬𝐭𝐞𝐦 𝐮𝐩𝐝𝐚𝐭𝐞𝐝 𝐬𝐮𝐜𝐜𝐞𝐬𝐬𝐟𝐮𝐥𝐥𝐲! ✨"
     )
     return text
 
 def format_system_off_message(username=None):
-    user_display = username if username else "User"
+    user_display = username if username else "𝐔𝐬𝐞𝐫"
     
     text = (
         "╭━━━━━━━━━━━━━━━✪\n"
-        "│🔴 SYSTEM IS OFF\n"
+        "│🔴 𝐒𝐘𝐒𝐓𝐄𝐌 𝐈𝐒 𝐎𝐅𝐅\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ ⚠️ INFO ✦ ⟯\n"
-        "│🔘 The like system is currently OFF\n"
-        "│⏰ Please try again later\n"
-        "│👑 Contact owner for more info\n"
+        "╭━⟮ ✦ ⚠️ 𝐈𝐍𝐅𝐎 ✦ ⟯\n"
+        "│🔘 𝐓𝐡𝐞 𝐥𝐢𝐤𝐞 𝐬𝐲𝐬𝐭𝐞𝐦 𝐢𝐬 𝐜𝐮𝐫𝐫𝐞𝐧𝐭𝐥𝐲 𝐎𝐅𝐅\n"
+        "│⏰ 𝐏𝐥𝐞𝐚𝐬𝐞 𝐭𝐫𝐲 𝐚𝐠𝐚𝐢𝐧 𝐥𝐚𝐭𝐞𝐫\n"
+        "│👑 𝐂𝐨𝐧𝐭𝐚𝐜𝐭 𝐨𝐰𝐧𝐞𝐫 𝐟𝐨𝐫 𝐦𝐨𝐫𝐞 𝐢𝐧𝐟𝐨\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "✨ Thank you for understanding! ✨\n\n"
-        "╭━⟮ ✦ 🧾 DETAILS ✦ ⟯\n"
-        f"│🙋🏻User: {user_display}\n"
+        "✨ 𝐓𝐡𝐚𝐧𝐤 𝐲𝐨𝐮 𝐟𝐨𝐫 𝐮𝐧𝐝𝐞𝐫𝐬𝐭𝐚𝐧𝐝𝐢𝐧𝐠! ✨\n\n"
+        "╭━⟮ ✦ 🧾 𝐃𝐄𝐓𝐀𝐈𝐋𝐒 ✦ ⟯\n"
+        f"│🙋🏻 𝐔𝐒𝐄𝐑 : {user_display}\n"
         "╰━━━━━━━━━━━━━━━✪"
     )
     return text
 
 def format_auto_like_list(user_auto_likes):
     if not user_auto_likes:
-        return "╭━━━━━━━━━━━━━━━✪\n│📭 NO ACTIVE AUTO LIKES\n╰━━━━━━━━━━━━━━━✪"
+        return "╭━━━━━━━━━━━━━━━✪\n│📭 𝐍𝐎 𝐀𝐂𝐓𝐈𝐕𝐄 𝐀𝐔𝐓𝐎 𝐋𝐈𝐊𝐄𝐒\n╰━━━━━━━━━━━━━━━✪"
     
     today_bd = datetime.now(BANGLADESH_TZ).date()
-    text = "╭━━━━━━━━━━━━━━━✪\n│🌟 YOUR AUTO LIKES\n╰━━━━━━━━━━━━━━━✪\n\n"
+    text = "╭━━━━━━━━━━━━━━━✪\n│🌟 𝐘𝐎𝐔𝐑 𝐀𝐔𝐓𝐎 𝐋𝐈𝐊𝐄𝐒\n╰━━━━━━━━━━━━━━━✪\n\n"
     
     for uid, data in user_auto_likes.items():
         expiry = data.get('expiry_date')
@@ -634,19 +627,19 @@ def format_auto_like_list(user_auto_likes):
         region = data.get('region', 'BD')
         
         if days_left < 0:
-            status = "❌ EXPIRED"
+            status = "❌ 𝐄𝐗𝐏𝐈𝐑𝐄𝐃"
         elif days_left == 0:
-            status = "⚠️ EXPIRES TODAY"
+            status = "⚠️ 𝐄𝐗𝐏𝐈𝐑𝐄𝐒 𝐓𝐎𝐃𝐀𝐘"
         elif days_left <= 3:
-            status = f"⚠️ {days_left} DAYS LEFT"
+            status = f"⚠️ {days_left} 𝐃𝐀𝐘𝐒 𝐋𝐄𝐅𝐓"
         else:
-            status = f"✅ {days_left} DAYS LEFT"
+            status = f"✅ {days_left} 𝐃𝐀𝐘𝐒 𝐋𝐄𝐅𝐓"
         
-        text += f"╭━⟮ 🆔 UID: {uid} ⟯\n"
-        text += f"│🌍 REGION: {region}\n"
-        text += f"│📅 ADDED: {data.get('added_date', 'N/A')}\n"
-        text += f"│📆 EXPIRES: {expiry}\n"
-        text += f"│📊 STATUS: {status}\n"
+        text += f"╭━⟮ 🆔 𝐔𝐈𝐃 : {uid} ⟯\n"
+        text += f"│🌍 𝐑𝐄𝐆𝐈𝐎𝐍 : {region}\n"
+        text += f"│📅 𝐀𝐃𝐃𝐄𝐃 : {data.get('added_date', 'N/A')}\n"
+        text += f"│📆 𝐄𝐗𝐏𝐈𝐑𝐄𝐒 : {expiry}\n"
+        text += f"│📊 𝐒𝐓𝐀𝐓𝐔𝐒 : {status}\n"
         text += "╰━━━━━━━━━━━━━━━✪\n\n"
     
     return text
@@ -655,13 +648,13 @@ def format_all_auto_likes():
     active_likes = get_all_active_auto_likes()
     
     if not active_likes:
-        return "╭━━━━━━━━━━━━━━━✪\n│📭 NO ACTIVE AUTO LIKES\n╰━━━━━━━━━━━━━━━✪"
+        return "╭━━━━━━━━━━━━━━━✪\n│📭 𝐍𝐎 𝐀𝐂𝐓𝐈𝐕𝐄 𝐀𝐔𝐓𝐎 𝐋𝐈𝐊𝐄𝐒\n╰━━━━━━━━━━━━━━━✪"
     
     today_bd = datetime.now(BANGLADESH_TZ).date()
-    text = "╭━━━━━━━━━━━━━━━✪\n│📋 ALL ACTIVE AUTO LIKES\n╰━━━━━━━━━━━━━━━✪\n\n"
+    text = "╭━━━━━━━━━━━━━━━✪\n│📋 𝐀𝐋𝐋 𝐀𝐂𝐓𝐈𝐕𝐄 𝐀𝐔𝐓𝐎 𝐋𝐈𝐊𝐄𝐒\n╰━━━━━━━━━━━━━━━✪\n\n"
     
     for tg_user_id, uids in active_likes.items():
-        text += f"╭━⟮ 👤 TG USER: {tg_user_id} ⟯\n"
+        text += f"╭━⟮ 👤 𝐓𝐆 𝐔𝐒𝐄𝐑 : {tg_user_id} ⟯\n"
         for uid, data in uids.items():
             expiry = data.get('expiry_date')
             if isinstance(expiry, str):
@@ -672,46 +665,45 @@ def format_all_auto_likes():
             region = data.get('region', 'BD')
             
             if days_left < 0:
-                status = "EXPIRED"
+                status = "𝐄𝐗𝐏𝐈𝐑𝐄𝐃"
             elif days_left == 0:
-                status = "EXPIRES TODAY"
+                status = "𝐄𝐗𝐏𝐈𝐑𝐄𝐒 𝐓𝐎𝐃𝐀𝐘"
             elif days_left <= 3:
-                status = f"{days_left} DAYS LEFT ⚠️"
+                status = f"{days_left} 𝐃𝐀𝐘𝐒 𝐋𝐄𝐅𝐓 ⚠️"
             else:
-                status = f"{days_left} DAYS LEFT ✅"
+                status = f"{days_left} 𝐃𝐀𝐘𝐒 𝐋𝐄𝐅𝐓 ✅"
             
-            text += f"│   🆔 UID: {uid}\n"
-            text += f"│   🌍 REGION: {region}\n"
-            text += f"│   📅 EXPIRES: {expiry} ({status})\n"
+            text += f"│   🆔 𝐔𝐈𝐃 : {uid}\n"
+            text += f"│   🌍 𝐑𝐄𝐆𝐈𝐎𝐍 : {region}\n"
+            text += f"│   📅 𝐄𝐗𝐏𝐈𝐑𝐄𝐒 : {expiry} ({status})\n"
         text += "╰━━━━━━━━━━━━━━━✪\n\n"
     
     total_uids = sum(len(uids) for uids in active_likes.values())
-    text += f"╭━⟮ ✦ 📊 TOTAL ✦ ⟯\n"
-    text += f"│📌 USERS: {len(active_likes)}\n"
-    text += f"│📌 UIDs: {total_uids}\n"
+    text += f"╭━⟮ ✦ 📊 𝐓𝐎𝐓𝐀𝐋 ✦ ⟯\n"
+    text += f"│📌 𝐔𝐒𝐄𝐑𝐒 : {len(active_likes)}\n"
+    text += f"│📌 𝐔𝐈𝐃𝐬 : {total_uids}\n"
     text += "╰━━━━━━━━━━━━━━━✪"
     
     return text
 
 def format_region_list():
-    text = "╭━━━━━━━━━━━━━━━✪\n│🌍 SUPPORTED REGIONS\n╰━━━━━━━━━━━━━━━✪\n\n"
+    text = "╭━━━━━━━━━━━━━━━✪\n│🌍 𝐒𝐔𝐏𝐏𝐎𝐑𝐓𝐄𝐃 𝐑𝐄𝐆𝐈𝐎𝐍𝐒\n╰━━━━━━━━━━━━━━━✪\n\n"
     for i, region in enumerate(SUPPORTED_REGIONS, 1):
         text += f"╭━⟮ {i}. {region} ⟯\n"
-    text += f"\n╭━⟮ ✦ 📝 USAGE ✦ ⟯\n"
+    text += f"\n╭━⟮ ✦ 📝 𝐔𝐒𝐀𝐆𝐄 ✦ ⟯\n"
     text += f"│📌 /like <region> <UID>\n"
-    text += f"│🔰 EXAMPLE: /like BD 123456789\n"
+    text += f"│🔰 𝐄𝐗𝐀𝐌𝐏𝐋𝐄 : /like BD 123456789\n"
     text += "╰━━━━━━━━━━━━━━━✪"
     return text
 
 def format_auto_like_dm_box(results):
-    """Format auto like DM results in box style - শুধু ইউজারের নিজের UIDs"""
     now_bd = datetime.now(BANGLADESH_TZ)
     
     text = "╭━━━━━━━━━━━━━━━✪\n"
-    text += "│🤖 AUTO LIKE REPORT\n"
+    text += "│🤖 𝐀𝐔𝐓𝐎 𝐋𝐈𝐊𝐄 𝐑𝐄𝐏𝐎𝐑𝐓\n"
     text += "╰━━━━━━━━━━━━━━━✪\n\n"
     
-    text += "╭━⟮ ✦ ⏰ TIME ✦ ⟯\n"
+    text += "╭━⟮ ✦ ⏰ 𝐓𝐈𝐌𝐄 ✦ ⟯\n"
     text += f"│🕒 {now_bd.strftime('%I:%M %p')}\n"
     text += f"│📅 {now_bd.strftime('%d-%m-%Y')}\n"
     text += "╰━━━━━━━━━━━━━━━✪\n\n"
@@ -736,35 +728,35 @@ def format_auto_like_dm_box(results):
         expiry_status = ""
         if days_left is not None:
             if days_left < 0:
-                expiry_status = f"\n│📅 EXPIRY: EXPIRED ❌"
+                expiry_status = f"\n│📅 𝐄𝐗𝐏𝐈𝐑𝐘 : 𝐄𝐗𝐏𝐈𝐑𝐄𝐃 ❌"
             elif days_left == 0:
-                expiry_status = f"\n│📅 EXPIRY: EXPIRES TODAY ⚠️"
+                expiry_status = f"\n│📅 𝐄𝐗𝐏𝐈𝐑𝐘 : 𝐄𝐗𝐏𝐈𝐑𝐄𝐒 𝐓𝐎𝐃𝐀𝐘 ⚠️"
             elif days_left <= 3:
-                expiry_status = f"\n│📅 EXPIRY: {days_left} DAYS LEFT ⚠️"
+                expiry_status = f"\n│📅 𝐄𝐗𝐏𝐈𝐑𝐘 : {days_left} 𝐃𝐀𝐘𝐒 𝐋𝐄𝐅𝐓 ⚠️"
             else:
-                expiry_status = f"\n│📅 EXPIRY: {days_left} DAYS LEFT ✅"
+                expiry_status = f"\n│📅 𝐄𝐗𝐏𝐈𝐑𝐘 : {days_left} 𝐃𝐀𝐘𝐒 𝐋𝐄𝐅𝐓 ✅"
         
-        text += f"\n╭━⟮ 🆔 UID: {uid_num} ⟯\n"
-        text += f"│🌍 REGION: {region}\n"
-        text += f"│{status_emoji} STATUS: {status_text}\n"
-        text += f"│👤 NAME: {name[:35]}\n"
+        text += f"\n╭━⟮ 🆔 𝐔𝐈𝐃 : {uid_num} ⟯\n"
+        text += f"│🌍 𝐑𝐄𝐆𝐈𝐎𝐍 : {region}\n"
+        text += f"│{status_emoji} 𝐒𝐓𝐀𝐓𝐔𝐒 : {status_text}\n"
+        text += f"│👤 𝐍𝐀𝐌𝐄 : {name[:35]}\n"
         
         if status == 0:
             error_msg = result_data.get('error', 'Unknown error')[:50]
-            text += f"│⚠️ ERROR: {error_msg}\n"
+            text += f"│⚠️ 𝐄𝐑𝐑𝐎𝐑 : {error_msg}\n"
         else:
-            text += f"│👍 BEFORE: {likes_before}\n"
-            text += f"│❤️ AFTER: {likes_after}\n"
-            text += f"│➕ GIVEN: {likes_given}\n"
+            text += f"│👍 𝐁𝐄𝐅𝐎𝐑𝐄 : {likes_before}\n"
+            text += f"│❤️ 𝐀𝐅𝐓𝐄𝐑 : {likes_after}\n"
+            text += f"│➕ 𝐆𝐈𝐕𝐄𝐍 : {likes_given}\n"
         
         if added_date and added_date != 'N/A':
-            text += f"│📅 ADDED: {added_date}\n"
+            text += f"│📅 𝐀𝐃𝐃𝐄𝐃 : {added_date}\n"
         if expiry_date:
-            text += f"│📆 EXPIRES: {expiry_date}"
+            text += f"│📆 𝐄𝐗𝐏𝐈𝐑𝐄𝐒 : {expiry_date}"
         text += expiry_status
         text += f"\n╰━━━━━━━━━━━━━━━✪"
     
-    text += "\n\n✨ Thank you for using our service! ✨"
+    text += "\n\n✨ 𝐓𝐡𝐚𝐧𝐤 𝐲𝐨𝐮 𝐟𝐨𝐫 𝐮𝐬𝐢𝐧𝐠 𝐨𝐮𝐫 𝐬𝐞𝐫𝐯𝐢𝐜𝐞! ✨"
     
     return text
 
@@ -783,12 +775,11 @@ def call_api(uid, region="BD"):
     try:
         logger.info(f"Calling API for UID: {uid}, Region: {region}")
         
-        # Timeout বেশি দিন
         response = requests.get(
             url, 
             params=params, 
             timeout=30,
-            verify=False,  # HTTP এর জন্য
+            verify=False,
             allow_redirects=True
         )
         
@@ -810,6 +801,7 @@ def call_api(uid, region="BD"):
     except Exception as e:
         logger.error(f"Error: {e}")
         return {"status": 0, "error": str(e)[:50]}
+
 # ================= CHANNEL & GROUP CHECK =================
 def check_channel_membership(user_id):
     try:
@@ -842,28 +834,28 @@ def both_required(func):
         
         if not channel_ok or not group_ok:
             keyboard = InlineKeyboardMarkup(row_width=1)
-            keyboard.add(InlineKeyboardButton("1️⃣ JOIN CHANNEL", url=CHANNEL_LINK))
-            keyboard.add(InlineKeyboardButton("2️⃣ JOIN GROUP", url=REQUIRED_GROUP_LINK))
-            keyboard.add(InlineKeyboardButton("✅ VERIFY", callback_data="check_both_membership"))
+            keyboard.add(InlineKeyboardButton("1️⃣ 𝐉𝐎𝐈𝐍 𝐂𝐇𝐀𝐍𝐍𝐄𝐋", url=CHANNEL_LINK))
+            keyboard.add(InlineKeyboardButton("2️⃣ 𝐉𝐎𝐈𝐍 𝐆𝐑𝐎𝐔𝐏", url=REQUIRED_GROUP_LINK))
+            keyboard.add(InlineKeyboardButton("✅ 𝐕𝐄𝐑𝐈𝐅𝐘", callback_data="check_both_membership"))
             
-            channel_status = "✅ JOINED" if channel_ok else "❌ NOT JOINED"
-            group_status = "✅ JOINED" if group_ok else "❌ NOT JOINED"
+            channel_status = "✅ 𝐉𝐎𝐈𝐍𝐄𝐃" if channel_ok else "❌ 𝐍𝐎𝐓 𝐉𝐎𝐈𝐍𝐄𝐃"
+            group_status = "✅ 𝐉𝐎𝐈𝐍𝐄𝐃" if group_ok else "❌ 𝐍𝐎𝐓 𝐉𝐎𝐈𝐍𝐄𝐃"
             
             msg = (
                 "╭━━━━━━━━━━━━━━━✪\n"
-                "│🔒 JOIN CHANNEL & GROUP\n"
+                "│🔒 𝐉𝐎𝐈𝐍 𝐂𝐇𝐀𝐍𝐍𝐄𝐋 & 𝐆𝐑𝐎𝐔𝐏\n"
                 "╰━━━━━━━━━━━━━━━✪\n\n"
-                "✨ Click the buttons below ✨\n\n"
-                "1️⃣ First, join the channel\n"
-                "2️⃣ Then, join the group\n"
-                "3️⃣ Finally, click VERIFY\n\n"
-                "╭━⟮ ✦ 📢 CHANNEL ✦ ⟯\n"
-                f"│📢 Name: {CHANNEL_USERNAME}\n"
-                f"│📊 Status: {channel_status}\n"
+                "✨ 𝐂𝐥𝐢𝐜𝐤 𝐭𝐡𝐞 𝐛𝐮𝐭𝐭𝐨𝐧𝐬 𝐛𝐞𝐥𝐨𝐰 ✨\n\n"
+                "1️⃣ 𝐅𝐢𝐫𝐬𝐭, 𝐣𝐨𝐢𝐧 𝐭𝐡𝐞 𝐜𝐡𝐚𝐧𝐧𝐞𝐥\n"
+                "2️⃣ 𝐓𝐡𝐞𝐧, 𝐣𝐨𝐢𝐧 𝐭𝐡𝐞 𝐠𝐫𝐨𝐮𝐩\n"
+                "3️⃣ 𝐅𝐢𝐧𝐚𝐥𝐥𝐲, 𝐜𝐥𝐢𝐜𝐤 𝐕𝐄𝐑𝐈𝐅𝐘\n\n"
+                "╭━⟮ ✦ 📢 𝐂𝐇𝐀𝐍𝐍𝐄𝐋 ✦ ⟯\n"
+                f"│📢 𝐍𝐚𝐦𝐞 : {CHANNEL_USERNAME}\n"
+                f"│📊 𝐒𝐭𝐚𝐭𝐮𝐬 : {channel_status}\n"
                 "╰━━━━━━━━━━━━━━━✪\n\n"
-                "╭━⟮ ✦ 👥 GROUP ✦ ⟯\n"
-                f"│👥 Name: {REQUIRED_GROUP_USERNAME}\n"
-                f"│📊 Status: {group_status}\n"
+                "╭━⟮ ✦ 👥 𝐆𝐑𝐎𝐔𝐏 ✦ ⟯\n"
+                f"│👥 𝐍𝐚𝐦𝐞 : {REQUIRED_GROUP_USERNAME}\n"
+                f"│📊 𝐒𝐭𝐚𝐭𝐮𝐬 : {group_status}\n"
                 "╰━━━━━━━━━━━━━━━✪"
             )
             bot.reply_to(message, msg, parse_mode=None, reply_markup=keyboard)
@@ -880,41 +872,41 @@ def handle_callback(call):
         
         if channel_ok and group_ok:
             user_type = get_user_type(user_id)
-            bot.answer_callback_query(call.id, "✅ ACCESS GRANTED!")
+            bot.answer_callback_query(call.id, "✅ 𝐀𝐂𝐂𝐄𝐒𝐒 𝐆𝐑𝐀𝐍𝐓𝐄𝐃!")
             bot.delete_message(call.message.chat.id, call.message.message_id)
             
             welcome_text = (
                 "╭━━━━━━━━━━━━━━━✪\n"
-                "│✅ ACCESS GRANTED\n"
+                "│✅ 𝐀𝐂𝐂𝐄𝐒𝐒 𝐆𝐑𝐀𝐍𝐓𝐄𝐃\n"
                 "╰━━━━━━━━━━━━━━━✪\n\n"
-                f"╭━⟮ ✦ 👤 WELCOME ✦ ⟯\n"
-                f"│👋 Welcome {call.from_user.first_name}!\n"
-                f"│👑 Status: {user_type}\n"
+                f"╭━⟮ ✦ 👤 𝐖𝐄𝐋𝐂𝐎𝐌𝐄 ✦ ⟯\n"
+                f"│👋 𝐖𝐞𝐥𝐜𝐨𝐦𝐞 {call.from_user.first_name}!\n"
+                f"│👑 𝐒𝐭𝐚𝐭𝐮𝐬 : {user_type}\n"
                 "╰━━━━━━━━━━━━━━━✪\n\n"
-                "✨ You can now use the bot! ✨\n\n"
-                "╭━⟮ ✦ 📢 VERIFIED ✦ ⟯\n"
-                "│✅ Channel: JOINED\n"
-                "│✅ Group: JOINED\n"
+                "✨ 𝐘𝐨𝐮 𝐜𝐚𝐧 𝐧𝐨𝐰 𝐮𝐬𝐞 𝐭𝐡𝐞 𝐛𝐨𝐭! ✨\n\n"
+                "╭━⟮ ✦ 📢 𝐕𝐄𝐑𝐈𝐅𝐈𝐄𝐃 ✦ ⟯\n"
+                "│✅ 𝐂𝐡𝐚𝐧𝐧𝐞𝐥 : 𝐉𝐎𝐈𝐍𝐄𝐃\n"
+                "│✅ 𝐆𝐫𝐨𝐮𝐩 : 𝐉𝐎𝐈𝐍𝐄𝐃\n"
                 "╰━━━━━━━━━━━━━━━✪\n\n"
-                "╭━⟮ ✦ 🧾 DETAILS ✦ ⟯\n"
-                "│🔰 Use: /like BD UID\n"
-                f"│🙋🏻User: {get_display_username(call.message)}\n"
+                "╭━⟮ ✦ 🧾 𝐃𝐄𝐓𝐀𝐈𝐋𝐒 ✦ ⟯\n"
+                "│🔰 𝐔𝐬𝐞 : /like BD UID\n"
+                f"│🙋🏻 𝐔𝐬𝐞𝐫 : {get_display_username(call.message)}\n"
                 "╰━━━━━━━━━━━━━━━✪"
             )
             
             if user_type == "👤 FREE":
                 welcome_text += (
-                    "\n\n╭━⟮ ✦ 👑 VIP OFFER ✦ ⟯\n"
-                    "│🌟 Want unlimited likes?\n"
-                    "│📲 Contact @riyadalhasan11\n"
+                    "\n\n╭━⟮ ✦ 👑 𝐕𝐈𝐏 𝐎𝐅𝐅𝐄𝐑 ✦ ⟯\n"
+                    "│🌟 𝐖𝐚𝐧𝐭 𝐮𝐧𝐥𝐢𝐦𝐢𝐭𝐞𝐝 𝐥𝐢𝐤𝐞𝐬?\n"
+                    "│📲 𝐂𝐨𝐧𝐭𝐚𝐜𝐭 @riyadalhasan11\n"
                     "╰━━━━━━━━━━━━━━━✪"
                 )
             
             bot.send_message(call.message.chat.id, welcome_text)
         else:
-            channel_status = "✅ JOINED" if channel_ok else "❌ NOT JOINED"
-            group_status = "✅ JOINED" if group_ok else "❌ NOT JOINED"
-            bot.answer_callback_query(call.id, f"Channel: {channel_status} | Group: {group_status}", show_alert=True)
+            channel_status = "✅ 𝐉𝐎𝐈𝐍𝐄𝐃" if channel_ok else "❌ 𝐍𝐎𝐓 𝐉𝐎𝐈𝐍𝐄𝐃"
+            group_status = "✅ 𝐉𝐎𝐈𝐍𝐄𝐃" if group_ok else "❌ 𝐍𝐎𝐓 𝐉𝐎𝐈𝐍𝐄𝐃"
+            bot.answer_callback_query(call.id, f"𝐂𝐡𝐚𝐧𝐧𝐞𝐥 : {channel_status} | 𝐆𝐫𝐨𝐮𝐩 : {group_status}", show_alert=True)
     
     elif call.data.startswith('broadcast_'):
         handle_broadcast_callback(call)
@@ -923,13 +915,13 @@ def handle_callback(call):
 
 def get_user_type(user_id):
     if user_id == OWNER_ID:
-        return "👑 OWNER"
+        return "👑 𝐎𝐖𝐍𝐄𝐑"
     elif user_id in ADMIN_USERS:
-        return "🛡️ ADMIN"
+        return "🛡️ 𝐀𝐃𝐌𝐈𝐍"
     elif user_id in VIP_USERS:
-        return "🌟 VIP"
+        return "🌟 𝐕𝐈𝐏"
     else:
-        return "👤 FREE"
+        return "👤 𝐅𝐑𝐄𝐄"
 
 def is_allowed(message):
     if message.from_user.id == OWNER_ID or message.from_user.id in ADMIN_USERS:
@@ -945,7 +937,6 @@ def check_rate_limit(user_id):
     
     with lock:
         if user_id in rate_limiter:
-            # Remove old entries
             rate_limiter[user_id] = [t for t in rate_limiter[user_id] if t > minute_ago]
             if len(rate_limiter[user_id]) >= RATE_LIMIT:
                 return False
@@ -1009,25 +1000,24 @@ def set_like_system(status):
 
 # ================= AUTO TASK SENDER =================
 def send_auto_task():
-    # First cleanup expired auto likes
     expired_count = cleanup_expired_auto_likes()
     if expired_count > 0:
-        print(f"🗑️ Removed {expired_count} expired auto likes before task")
+        print(f"🗑️ 𝐑𝐞𝐦𝐨𝐯𝐞𝐝 {expired_count} 𝐞𝐱𝐩𝐢𝐫𝐞𝐝 𝐚𝐮𝐭𝐨 𝐥𝐢𝐤𝐞𝐬 𝐛𝐞𝐟𝐨𝐫𝐞 𝐭𝐚𝐬𝐤")
     
     now_bd = datetime.now(BANGLADESH_TZ)
     auto_hour = auto_time_data.get("hour", AUTO_LIKE_HOUR)
     auto_min = auto_time_data.get("minute", AUTO_LIKE_MINUTE)
-    time_suffix = "AM" if auto_hour < 12 else "PM"
+    time_suffix = "𝐀𝐌" if auto_hour < 12 else "𝐏𝐌"
     display_hour = auto_hour if auto_hour <= 12 else auto_hour - 12
     if display_hour == 0:
         display_hour = 12
     auto_time_str = f"{display_hour}:{auto_min:02d} {time_suffix}"
     
     print(f"\n{'='*60}")
-    print(f"📊 AUTO TASK STARTED at {now_bd.strftime('%H:%M:%S')}")
-    print(f"⏰ Auto Time: {auto_time_str}")
-    print(f"📅 Date: {now_bd.strftime('%d-%m-%Y')}")
-    print(f"📊 Total UIDs: {len(AUTO_LIKE_UIDS)}")
+    print(f"📊 𝐀𝐔𝐓𝐎 𝐓𝐀𝐒𝐊 𝐒𝐓𝐀𝐑𝐓𝐄𝐃 𝐚𝐭 {now_bd.strftime('%H:%M:%S')}")
+    print(f"⏰ 𝐀𝐮𝐭𝐨 𝐓𝐢𝐦𝐞 : {auto_time_str}")
+    print(f"📅 𝐃𝐚𝐭𝐞 : {now_bd.strftime('%d-%m-%Y')}")
+    print(f"📊 𝐓𝐨𝐭𝐚𝐥 𝐔𝐈𝐃𝐬 : {len(AUTO_LIKE_UIDS)}")
     print(f"{'='*60}\n")
     
     if not AUTO_LIKE_UIDS:
@@ -1035,16 +1025,16 @@ def send_auto_task():
             try:
                 bot.send_message(group_id, 
                     "╭━━━━━━━━━━━━━━━✪\n"
-                    "│📭 AUTO LIKE REPORT\n"
+                    "│📭 𝐀𝐔𝐓𝐎 𝐋𝐈𝐊𝐄 𝐑𝐄𝐏𝐎𝐑𝐓\n"
                     "╰━━━━━━━━━━━━━━━✪\n\n"
-                    "╭━⟮ ✦ ⏰ SCHEDULE INFO ✦ ⟯\n"
-                    f"│🕒 Auto Time: {auto_time_str}\n"
-                    f"│📅 Date: {now_bd.strftime('%d-%m-%Y')}\n"
-                    f"│🌏 Timezone: BDT (UTC+6)\n"
+                    "╭━⟮ ✦ ⏰ 𝐒𝐂𝐇𝐄𝐃𝐔𝐋𝐄 𝐈𝐍𝐅𝐎 ✦ ⟯\n"
+                    f"│🕒 𝐀𝐮𝐭𝐨 𝐓𝐢𝐦𝐞 : {auto_time_str}\n"
+                    f"│📅 𝐃𝐚𝐭𝐞 : {now_bd.strftime('%d-%m-%Y')}\n"
+                    f"│🌏 𝐓𝐢𝐦𝐞𝐳𝐨𝐧𝐞 : 𝐁𝐃𝐓 (𝐔𝐓𝐂+6)\n"
                     "╰━━━━━━━━━━━━━━━✪\n\n"
-                    "╭━⟮ ✦ 📊 STATUS ✦ ⟯\n"
-                    "│📭 Auto like list is EMPTY!\n"
-                    "│➡️ Add UIDs with /autolike command\n"
+                    "╭━⟮ ✦ 📊 𝐒𝐓𝐀𝐓𝐔𝐒 ✦ ⟯\n"
+                    "│📭 𝐀𝐮𝐭𝐨 𝐥𝐢𝐤𝐞 𝐥𝐢𝐬𝐭 𝐢𝐬 𝐄𝐌𝐏𝐓𝐘!\n"
+                    "│➡️ 𝐀𝐝𝐝 𝐔𝐈𝐃𝐬 𝐰𝐢𝐭𝐡 /autolike 𝐜𝐨𝐦𝐦𝐚𝐧𝐝\n"
                     "╰━━━━━━━━━━━━━━━✪"
                 )
             except:
@@ -1057,18 +1047,18 @@ def send_auto_task():
             msg = bot.send_message(
                 group_id,
                 "╭━━━━━━━━━━━━━━━✪\n"
-                "│⏳ AUTO TASK IN PROGRESS\n"
+                "│⏳ 𝐀𝐔𝐓𝐎 𝐓𝐀𝐒𝐊 𝐈𝐍 𝐏𝐑𝐎𝐆𝐑𝐄𝐒𝐒\n"
                 "╰━━━━━━━━━━━━━━━✪\n\n"
-                "╭━⟮ ✦ ⏰ SCHEDULE INFO ✦ ⟯\n"
-                f"│🕒 Auto Time: {auto_time_str}\n"
-                f"│📅 Date: {now_bd.strftime('%d-%m-%Y')}\n"
-                f"│🌏 Timezone: BDT (UTC+6)\n"
+                "╭━⟮ ✦ ⏰ 𝐒𝐂𝐇𝐄𝐃𝐔𝐋𝐄 𝐈𝐍𝐅𝐎 ✦ ⟯\n"
+                f"│🕒 𝐀𝐮𝐭𝐨 𝐓𝐢𝐦𝐞 : {auto_time_str}\n"
+                f"│📅 𝐃𝐚𝐭𝐞 : {now_bd.strftime('%d-%m-%Y')}\n"
+                f"│🌏 𝐓𝐢𝐦𝐞𝐳𝐨𝐧𝐞 : 𝐁𝐃𝐓 (𝐔𝐓𝐂+6)\n"
                 "╰━━━━━━━━━━━━━━━✪\n\n"
-                "╭━⟮ ✦ 📊 PROCESSING ✦ ⟯\n"
-                f"│📊 Total UIDs: {len(AUTO_LIKE_UIDS)}\n"
-                f"│🔄 Status: Processing each UID...\n"
+                "╭━⟮ ✦ 📊 𝐏𝐑𝐎𝐂𝐄𝐒𝐒𝐈𝐍𝐆 ✦ ⟯\n"
+                f"│📊 𝐓𝐨𝐭𝐚𝐥 𝐔𝐈𝐃𝐬 : {len(AUTO_LIKE_UIDS)}\n"
+                f"│🔄 𝐒𝐭𝐚𝐭𝐮𝐬 : 𝐏𝐫𝐨𝐜𝐞𝐬𝐬𝐢𝐧𝐠 𝐞𝐚𝐜𝐡 𝐔𝐈𝐃...\n"
                 "╰━━━━━━━━━━━━━━━✪\n\n"
-                "✨ Please wait... ✨"
+                "✨ 𝐏𝐥𝐞𝐚𝐬𝐞 𝐰𝐚𝐢𝐭... ✨"
             )
             processing_messages.append((group_id, msg.message_id))
         except Exception as e:
@@ -1100,10 +1090,10 @@ def send_auto_task():
                 break
         
         if days_left is not None and days_left < 0:
-            print(f"   ⚠️ UID {uid} is expired - skipping")
+            print(f"   ⚠️ 𝐔𝐈𝐃 {uid} 𝐢𝐬 𝐞𝐱𝐩𝐢𝐫𝐞𝐝 - 𝐬𝐤𝐢𝐩𝐩𝐢𝐧𝐠")
             continue
         
-        print(f"[{idx}/{len(uids_to_process)}] Processing UID: {uid} (Region: {assigned_region})")
+        print(f"[{idx}/{len(uids_to_process)}] 𝐏𝐫𝐨𝐜𝐞𝐬𝐬𝐢𝐧𝐠 𝐔𝐈𝐃 : {uid} (𝐑𝐞𝐠𝐢𝐨𝐧 : {assigned_region})")
         
         try:
             res = call_api(uid, assigned_region)
@@ -1119,49 +1109,49 @@ def send_auto_task():
             
             if status == 2:
                 status_emoji = "⚠️"
-                status_text = "MAX REACHED"
+                status_text = "𝐌𝐀𝐗 𝐑𝐄𝐀𝐂𝐇𝐄𝐃"
                 given_text = "0"
                 max_count += 1
             elif status == 0:
                 status_emoji = "❌"
-                status_text = "FAILED"
+                status_text = "𝐅𝐀𝐈𝐋𝐄𝐃"
                 error_msg = res.get('error', 'Unknown error')[:35]
                 given_text = "0"
                 fail_count += 1
             else:
                 status_emoji = "✅"
-                status_text = "SUCCESS"
+                status_text = "𝐒𝐔𝐂𝐂𝐄𝐒𝐒"
                 given_text = str(likes_given)
                 success_count += 1
             
             expiry_status = ""
             if days_left is not None:
                 if days_left < 0:
-                    expiry_status = f"\n│📅 EXPIRY: EXPIRED ❌"
+                    expiry_status = f"\n│📅 𝐄𝐗𝐏𝐈𝐑𝐘 : 𝐄𝐗𝐏𝐈𝐑𝐄𝐃 ❌"
                 elif days_left == 0:
-                    expiry_status = f"\n│📅 EXPIRY: EXPIRES TODAY ⚠️"
+                    expiry_status = f"\n│📅 𝐄𝐗𝐏𝐈𝐑𝐘 : 𝐄𝐗𝐏𝐈𝐑𝐄𝐒 𝐓𝐎𝐃𝐀𝐘 ⚠️"
                 elif days_left <= 3:
-                    expiry_status = f"\n│📅 EXPIRY: {days_left} DAYS LEFT ⚠️"
+                    expiry_status = f"\n│📅 𝐄𝐗𝐏𝐈𝐑𝐘 : {days_left} 𝐃𝐀𝐘𝐒 𝐋𝐄𝐅𝐓 ⚠️"
                 else:
-                    expiry_status = f"\n│📅 EXPIRY: {days_left} DAYS LEFT ✅"
+                    expiry_status = f"\n│📅 𝐄𝐗𝐏𝐈𝐑𝐘 : {days_left} 𝐃𝐀𝐘𝐒 𝐋𝐄𝐅𝐓 ✅"
             
             result_text = (
-                f"\n╭━⟮ 🆔 UID: {uid_num} ⟯\n"
-                f"│🌍 REGION: {region}\n"
-                f"│{status_emoji} STATUS: {status_text}\n"
-                f"│👤 NAME: {name[:35]}\n"
-                f"│👍 BEFORE: {likes_before}\n"
-                f"│❤️ AFTER: {likes_after}\n"
-                f"│➕ GIVEN: {given_text}"
+                f"\n╭━⟮ 🆔 𝐔𝐈𝐃 : {uid_num} ⟯\n"
+                f"│🌍 𝐑𝐄𝐆𝐈𝐎𝐍 : {region}\n"
+                f"│{status_emoji} 𝐒𝐓𝐀𝐓𝐔𝐒 : {status_text}\n"
+                f"│👤 𝐍𝐀𝐌𝐄 : {name[:35]}\n"
+                f"│👍 𝐁𝐄𝐅𝐎𝐑𝐄 : {likes_before}\n"
+                f"│❤️ 𝐀𝐅𝐓𝐄𝐑 : {likes_after}\n"
+                f"│➕ 𝐆𝐈𝐕𝐄𝐍 : {given_text}"
             )
             
             if status == 0:
-                result_text += f"\n│⚠️ ERROR: {error_msg}"
+                result_text += f"\n│⚠️ 𝐄𝐑𝐑𝐎𝐑 : {error_msg}"
             
             if added_date and added_date != 'N/A':
-                result_text += f"\n│📅 ADDED: {added_date}"
+                result_text += f"\n│📅 𝐀𝐃𝐃𝐄𝐃 : {added_date}"
             if expiry_date:
-                result_text += f"\n│📆 EXPIRES: {expiry_date}"
+                result_text += f"\n│📆 𝐄𝐗𝐏𝐈𝐑𝐄𝐒 : {expiry_date}"
             result_text += expiry_status
             result_text += f"\n╰━━━━━━━━━━━━━━━✪"
             
@@ -1188,13 +1178,13 @@ def send_auto_task():
         except Exception as e:
             fail_count += 1
             result_text = (
-                f"\n╭━⟮ 🆔 UID: {uid} ⟯\n"
-                f"│❌ STATUS: ERROR\n"
-                f"│⚠️ ERROR: {str(e)[:50]}\n"
+                f"\n╭━⟮ 🆔 𝐔𝐈𝐃 : {uid} ⟯\n"
+                f"│❌ 𝐒𝐓𝐀𝐓𝐔𝐒 : 𝐄𝐑𝐑𝐎𝐑\n"
+                f"│⚠️ 𝐄𝐑𝐑𝐎𝐑 : {str(e)[:50]}\n"
                 f"╰━━━━━━━━━━━━━━━✪"
             )
             all_results.append(result_text)
-            print(f"   ❌ ERROR - {str(e)[:40]}")
+            print(f"   ❌ 𝐄𝐑𝐑𝐎𝐑 - {str(e)[:40]}")
             
             if assigned_user:
                 if assigned_user not in user_results:
@@ -1208,7 +1198,7 @@ def send_auto_task():
                     "days_left": days_left,
                     "added_date": added_date,
                     "name": "N/A",
-                    "status_text": "ERROR",
+                    "status_text": "𝐄𝐑𝐑𝐎𝐑",
                     "status_emoji": "❌"
                 })
     
@@ -1216,52 +1206,52 @@ def send_auto_task():
     success_rate = (success_count / total * 100) if total > 0 else 0
     
     print(f"\n{'='*60}")
-    print(f"📊 AUTO TASK SUMMARY")
-    print(f"📌 Total UIDs: {total}")
-    print(f"✅ Success: {success_count}")
-    print(f"⚠️ Max Reached: {max_count}")
-    print(f"❌ Failed: {fail_count}")
-    print(f"📈 Success Rate: {success_rate:.1f}%")
+    print(f"📊 𝐀𝐔𝐓𝐎 𝐓𝐀𝐒𝐊 𝐒𝐔𝐌𝐌𝐀𝐑𝐘")
+    print(f"📌 𝐓𝐨𝐭𝐚𝐥 𝐔𝐈𝐃𝐬 : {total}")
+    print(f"✅ 𝐒𝐮𝐜𝐜𝐞𝐬𝐬 : {success_count}")
+    print(f"⚠️ 𝐌𝐚𝐱 𝐑𝐞𝐚𝐜𝐡𝐞𝐝 : {max_count}")
+    print(f"❌ 𝐅𝐚𝐢𝐥𝐞𝐝 : {fail_count}")
+    print(f"📈 𝐒𝐮𝐜𝐜𝐞𝐬𝐬 𝐑𝐚𝐭𝐞 : {success_rate:.1f}%")
     print(f"{'='*60}\n")
     
     report = "╭━━━━━━━━━━━━━━━✪\n"
-    report += "│📋 AUTO LIKE TASK REPORT\n"
+    report += "│📋 𝐀𝐔𝐓𝐎 𝐋𝐈𝐊𝐄 𝐓𝐀𝐒𝐊 𝐑𝐄𝐏𝐎𝐑𝐓\n"
     report += "╰━━━━━━━━━━━━━━━✪\n\n"
     
-    report += "╭━⟮ ✦ ⏰ SCHEDULE INFO ✦ ⟯\n"
-    report += f"│🕒 Auto Time: {auto_time_str}\n"
-    report += f"│📅 Date: {now_bd.strftime('%d-%m-%Y')}\n"
-    report += f"│🌏 Timezone: BDT (UTC+6)\n"
+    report += "╭━⟮ ✦ ⏰ 𝐒𝐂𝐇𝐄𝐃𝐔𝐋𝐄 𝐈𝐍𝐅𝐎 ✦ ⟯\n"
+    report += f"│🕒 𝐀𝐮𝐭𝐨 𝐓𝐢𝐦𝐞 : {auto_time_str}\n"
+    report += f"│📅 𝐃𝐚𝐭𝐞 : {now_bd.strftime('%d-%m-%Y')}\n"
+    report += f"│🌏 𝐓𝐢𝐦𝐞𝐳𝐨𝐧𝐞 : 𝐁𝐃𝐓 (𝐔𝐓𝐂+6)\n"
     report += "╰━━━━━━━━━━━━━━━✪\n\n"
     
-    report += "╭━⟮ ✦ 📊 SUMMARY ✦ ⟯\n"
-    report += f"│📌 Total UIDs: {total}\n"
-    report += f"│✅ Success: {success_count}\n"
-    report += f"│⚠️ Max Reached: {max_count}\n"
-    report += f"│❌ Failed: {fail_count}\n"
-    report += f"│📈 Success Rate: {success_rate:.1f}%\n"
+    report += "╭━⟮ ✦ 📊 𝐒𝐔𝐌𝐌𝐀𝐑𝐘 ✦ ⟯\n"
+    report += f"│📌 𝐓𝐨𝐭𝐚𝐥 𝐔𝐈𝐃𝐬 : {total}\n"
+    report += f"│✅ 𝐒𝐮𝐜𝐜𝐞𝐬𝐬 : {success_count}\n"
+    report += f"│⚠️ 𝐌𝐚𝐱 𝐑𝐞𝐚𝐜𝐡𝐞𝐝 : {max_count}\n"
+    report += f"│❌ 𝐅𝐚𝐢𝐥𝐞𝐝 : {fail_count}\n"
+    report += f"│📈 𝐒𝐮𝐜𝐜𝐞𝐬𝐬 𝐑𝐚𝐭𝐞 : {success_rate:.1f}%\n"
     report += "╰━━━━━━━━━━━━━━━✪\n\n"
     
     if region_stats:
-        report += "╭━⟮ ✦ 🌍 REGION STATS ✦ ⟯\n"
+        report += "╭━⟮ ✦ 🌍 𝐑𝐄𝐆𝐈𝐎𝐍 𝐒𝐓𝐀𝐓𝐒 ✦ ⟯\n"
         for region, count in sorted(region_stats.items(), key=lambda x: x[1], reverse=True):
-            report += f"│{region}: {count}\n"
+            report += f"│{region} : {count}\n"
         report += "╰━━━━━━━━━━━━━━━✪\n\n"
     
-    report += "╭━⟮ ✦ 🔍 DETAILED RESULTS ✦ ⟯\n"
+    report += "╭━⟮ ✦ 🔍 𝐃𝐄𝐓𝐀𝐈𝐋𝐄𝐃 𝐑𝐄𝐒𝐔𝐋𝐓𝐒 ✦ ⟯\n"
     for res in all_results:
         report += res
     report += "\n╰━━━━━━━━━━━━━━━✪\n\n"
-    report += "✨ Thank you for using our service! ✨\n\n"
-    report += "╭━⟮ ✦ 🧾 DETAILS ✦ ⟯\n"
-    report += "│🤖 Bot: @riyadob52likebot\n"
-    report += "│👑 Owner: @riyadalhasan11\n"
+    report += "✨ 𝐓𝐡𝐚𝐧𝐤 𝐲𝐨𝐮 𝐟𝐨𝐫 𝐮𝐬𝐢𝐧𝐠 𝐨𝐮𝐫 𝐬𝐞𝐫𝐯𝐢𝐜𝐞! ✨\n\n"
+    report += "╭━⟮ ✦ 🧾 𝐃𝐄𝐓𝐀𝐈𝐋𝐒 ✦ ⟯\n"
+    report += "│🤖 𝐁𝐨𝐭 : @riyadob52likebot\n"
+    report += "│👑 𝐎𝐰𝐧𝐞𝐫 : @riyadalhasan11\n"
     report += "╰━━━━━━━━━━━━━━━✪"
     
     for group_id, msg_id in processing_messages:
         try:
             bot.edit_message_text(report, group_id, msg_id, parse_mode=None)
-            print(f"✅ Report sent to group: {group_id}")
+            print(f"✅ 𝐑𝐞𝐩𝐨𝐫𝐭 𝐬𝐞𝐧𝐭 𝐭𝐨 𝐠𝐫𝐨𝐮𝐩 : {group_id}")
         except Exception as e:
             logger.error(f"Error editing message in group {group_id}: {e}")
             try:
@@ -1274,7 +1264,7 @@ def send_auto_task():
                             bot.send_message(group_id, chunk, parse_mode=None)
                 else:
                     bot.send_message(group_id, report, parse_mode=None)
-                print(f"✅ Report sent to group: {group_id} (as new message)")
+                print(f"✅ 𝐑𝐞𝐩𝐨𝐫𝐭 𝐬𝐞𝐧𝐭 𝐭𝐨 𝐠𝐫𝐨𝐮𝐩 : {group_id} (𝐚𝐬 𝐧𝐞𝐰 𝐦𝐞𝐬𝐬𝐚𝐠𝐞)")
             except:
                 pass
     
@@ -1286,7 +1276,7 @@ def send_auto_task():
             dm_text = format_auto_like_dm_box(results)
             bot.send_message(user_id_int, dm_text)
             dm_sent += 1
-            print(f"📨 DM sent to user {tg_user_id} ({len(results)} reports)")
+            print(f"📨 𝐃𝐌 𝐬𝐞𝐧𝐭 𝐭𝐨 𝐮𝐬𝐞𝐫 {tg_user_id} ({len(results)} 𝐫𝐞𝐩𝐨𝐫𝐭𝐬)")
             time.sleep(0.5)
         except Exception as e:
             dm_failed += 1
@@ -1294,21 +1284,21 @@ def send_auto_task():
     
     summary_report = (
         "╭━━━━━━━━━━━━━━━✪\n"
-        "│📊 AUTO TASK COMPLETE\n"
+        "│📊 𝐀𝐔𝐓𝐎 𝐓𝐀𝐒𝐊 𝐂𝐎𝐌𝐏𝐋𝐄𝐓𝐄\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        f"📌 Total: {total}\n"
-        f"✅ Success: {success_count}\n"
-        f"⚠️ Max: {max_count}\n"
-        f"❌ Failed: {fail_count}\n"
-        f"📈 Rate: {success_rate:.1f}%\n\n"
-        f"📨 DM Sent: {dm_sent} users\n"
-        f"❌ DM Failed: {dm_failed}\n\n"
-        "✨ Task completed successfully! ✨"
+        f"📌 𝐓𝐨𝐭𝐚𝐥 : {total}\n"
+        f"✅ 𝐒𝐮𝐜𝐜𝐞𝐬𝐬 : {success_count}\n"
+        f"⚠️ 𝐌𝐚𝐱 : {max_count}\n"
+        f"❌ 𝐅𝐚𝐢𝐥𝐞𝐝 : {fail_count}\n"
+        f"📈 𝐑𝐚𝐭𝐞 : {success_rate:.1f}%\n\n"
+        f"📨 𝐃𝐌 𝐒𝐞𝐧𝐭 : {dm_sent} 𝐮𝐬𝐞𝐫𝐬\n"
+        f"❌ 𝐃𝐌 𝐅𝐚𝐢𝐥𝐞𝐝 : {dm_failed}\n\n"
+        "✨ 𝐓𝐚𝐬𝐤 𝐜𝐨𝐦𝐩𝐥𝐞𝐭𝐞𝐝 𝐬𝐮𝐜𝐜𝐞𝐬𝐬𝐟𝐮𝐥𝐥𝐲! ✨"
     )
     bot.send_message(OWNER_ID, summary_report)
     
     save_all_data()
-    print(f"✅ Auto task fully completed at {now_bd.strftime('%H:%M:%S')}")
+    print(f"✅ 𝐀𝐮𝐭𝐨 𝐭𝐚𝐬𝐤 𝐟𝐮𝐥𝐥𝐲 𝐜𝐨𝐦𝐩𝐥𝐞𝐭𝐞𝐝 𝐚𝐭 {now_bd.strftime('%H:%M:%S')}")
 
 # ================= AUTO LIKE SCHEDULER =================
 def auto_scheduler():
@@ -1317,8 +1307,8 @@ def auto_scheduler():
     error_count = 0
     check_count = 0
     
-    print("\n🕐 AUTO SCHEDULER STARTED")
-    print("⏰ Checking every 30 seconds for scheduled time\n")
+    print("\n🕐 𝐀𝐔𝐓𝐎 𝐒𝐂𝐇𝐄𝐃𝐔𝐋𝐄𝐑 𝐒𝐓𝐀𝐑𝐓𝐄𝐃")
+    print("⏰ 𝐂𝐡𝐞𝐜𝐤𝐢𝐧𝐠 𝐞𝐯𝐞𝐫𝐲 30 𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐟𝐨𝐫 𝐬𝐜𝐡𝐞𝐝𝐮𝐥𝐞𝐝 𝐭𝐢𝐦𝐞\n")
     
     while True:
         try:
@@ -1332,33 +1322,33 @@ def auto_scheduler():
             
             check_count += 1
             if check_count % 2 == 0:
-                print(f"⏰ [{now_bd.strftime('%H:%M:%S')}] Scheduler Check #{check_count} - Target: {auto_hour:02d}:{auto_min:02d} | UIDs: {len(AUTO_LIKE_UIDS)}")
+                print(f"⏰ [{now_bd.strftime('%H:%M:%S')}] 𝐒𝐜𝐡𝐞𝐝𝐮𝐥𝐞𝐫 𝐂𝐡𝐞𝐜𝐤 #{check_count} - 𝐓𝐚𝐫𝐠𝐞𝐭 : {auto_hour:02d}:{auto_min:02d} | 𝐔𝐈𝐃𝐬 : {len(AUTO_LIKE_UIDS)}")
             
             if current_hour == auto_hour and current_minute == auto_min:
                 if last_run_date != now_bd.date():
                     print(f"\n{'='*60}")
-                    print(f"✅✅✅ AUTO TASK TRIGGERED at {now_bd.strftime('%H:%M:%S')} ✅✅✅")
-                    print(f"📅 Date: {now_bd.strftime('%Y-%m-%d')}")
-                    print(f"🎯 Target Time: {auto_hour:02d}:{auto_min:02d}")
-                    print(f"📊 UIDs to process: {len(AUTO_LIKE_UIDS)}")
+                    print(f"✅✅✅ 𝐀𝐔𝐓𝐎 𝐓𝐀𝐒𝐊 𝐓𝐑𝐈𝐆𝐆𝐄𝐑𝐄𝐃 𝐚𝐭 {now_bd.strftime('%H:%M:%S')} ✅✅✅")
+                    print(f"📅 𝐃𝐚𝐭𝐞 : {now_bd.strftime('%Y-%m-%d')}")
+                    print(f"🎯 𝐓𝐚𝐫𝐠𝐞𝐭 𝐓𝐢𝐦𝐞 : {auto_hour:02d}:{auto_min:02d}")
+                    print(f"📊 𝐔𝐈𝐃𝐬 𝐭𝐨 𝐩𝐫𝐨𝐜𝐞𝐬𝐬 : {len(AUTO_LIKE_UIDS)}")
                     print(f"{'='*60}\n")
-                    logger.info(f"✅ AUTO TASK TRIGGERED at {now_bd.strftime('%Y-%m-%d %H:%M:%S')}")
+                    logger.info(f"✅ 𝐀𝐔𝐓𝐎 𝐓𝐀𝐒𝐊 𝐓𝐑𝐈𝐆𝐆𝐄𝐑𝐄𝐃 𝐚𝐭 {now_bd.strftime('%Y-%m-%d %H:%M:%S')}")
                     
                     try:
                         if AUTO_LIKE_UIDS:
                             send_auto_task()
                         else:
-                            print(f"⚠️ No UIDs in auto list - skipping")
+                            print(f"⚠️ 𝐍𝐨 𝐔𝐈𝐃𝐬 𝐢𝐧 𝐚𝐮𝐭𝐨 𝐥𝐢𝐬𝐭 - 𝐬𝐤𝐢𝐩𝐩𝐢𝐧𝐠")
                             for group_id in TASK_GROUPS:
                                 try:
                                     bot.send_message(group_id, 
                                         "╭━━━━━━━━━━━━━━━✪\n"
-                                        "│⚠️ AUTO TASK SKIPPED\n"
+                                        "│⚠️ 𝐀𝐔𝐓𝐎 𝐓𝐀𝐒𝐊 𝐒𝐊𝐈𝐏𝐏𝐄𝐃\n"
                                         "╰━━━━━━━━━━━━━━━✪\n\n"
-                                        f"⏰ Time: {auto_hour:02d}:{auto_min:02d}\n"
-                                        f"📅 Date: {now_bd.strftime('%d-%m-%Y')}\n\n"
-                                        "📭 No UIDs in auto list!\n"
-                                        "➡️ Add UIDs with /autolike command"
+                                        f"⏰ 𝐓𝐢𝐦𝐞 : {auto_hour:02d}:{auto_min:02d}\n"
+                                        f"📅 𝐃𝐚𝐭𝐞 : {now_bd.strftime('%d-%m-%Y')}\n\n"
+                                        "📭 𝐍𝐨 𝐔𝐈𝐃𝐬 𝐢𝐧 𝐚𝐮𝐭𝐨 𝐥𝐢𝐬𝐭!\n"
+                                        "➡️ 𝐀𝐝𝐝 𝐔𝐈𝐃𝐬 𝐰𝐢𝐭𝐡 /autolike 𝐜𝐨𝐦𝐦𝐚𝐧𝐝"
                                     )
                                 except:
                                     pass
@@ -1367,25 +1357,25 @@ def auto_scheduler():
                         error_count = 0
                         save_all_data()
                         
-                        print(f"✅ Last run date updated to: {last_run_date}")
-                        print(f"⏱️ Waiting 2 minutes to avoid duplicate runs...\n")
+                        print(f"✅ 𝐋𝐚𝐬𝐭 𝐫𝐮𝐧 𝐝𝐚𝐭𝐞 𝐮𝐩𝐝𝐚𝐭𝐞𝐝 𝐭𝐨 : {last_run_date}")
+                        print(f"⏱️ 𝐖𝐚𝐢𝐭𝐢𝐧𝐠 2 𝐦𝐢𝐧𝐮𝐭𝐞𝐬 𝐭𝐨 𝐚𝐯𝐨𝐢𝐝 𝐝𝐮𝐩𝐥𝐢𝐜𝐚𝐭𝐞 𝐫𝐮𝐧𝐬...\n")
                         
                         time.sleep(120)
                         
                     except Exception as e:
-                        logger.error(f"❌ Error in auto task execution: {e}")
-                        print(f"❌❌❌ Error in auto task execution: {e}")
+                        logger.error(f"❌ 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐚𝐮𝐭𝐨 𝐭𝐚𝐬𝐤 𝐞𝐱𝐞𝐜𝐮𝐭𝐢𝐨𝐧 : {e}")
+                        print(f"❌❌❌ 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐚𝐮𝐭𝐨 𝐭𝐚𝐬𝐤 𝐞𝐱𝐞𝐜𝐮𝐭𝐢𝐨𝐧 : {e}")
                         error_count += 1
                         
                         if error_count > 3:
-                            print("⚠️ Multiple errors detected, waiting 5 minutes...")
+                            print("⚠️ 𝐌𝐮𝐥𝐭𝐢𝐩𝐥𝐞 𝐞𝐫𝐫𝐨𝐫𝐬 𝐝𝐞𝐭𝐞𝐜𝐭𝐞𝐝, 𝐰𝐚𝐢𝐭𝐢𝐧𝐠 5 𝐦𝐢𝐧𝐮𝐭𝐞𝐬...")
                             time.sleep(300)
             
             time.sleep(30)
             
         except Exception as e:
-            logger.error(f"❌ Critical error in auto_scheduler: {e}")
-            print(f"❌❌❌ CRITICAL ERROR: {e}")
+            logger.error(f"❌ 𝐂𝐫𝐢𝐭𝐢𝐜𝐚𝐥 𝐞𝐫𝐫𝐨𝐫 𝐢𝐧 𝐚𝐮𝐭𝐨_𝐬𝐜𝐡𝐞𝐝𝐮𝐥𝐞𝐫 : {e}")
+            print(f"❌❌❌ 𝐂𝐑𝐈𝐓𝐈𝐂𝐀𝐋 𝐄𝐑𝐑𝐎𝐑 : {e}")
             error_count += 1
             time.sleep(60)
 
@@ -1397,9 +1387,9 @@ def start_cmd(message):
     if not is_allowed(message) and message.from_user.id != OWNER_ID:
         bot.reply_to(message, 
             "╭━━━━━━━━━━━━━━━✪\n"
-            "│❌ NOT ALLOWED\n"
+            "│❌ 𝐍𝐎𝐓 𝐀𝐋𝐋𝐎𝐖𝐄𝐃\n"
             "╰━━━━━━━━━━━━━━━✪\n\n"
-            "❌ This bot works only in allowed groups!"
+            "❌ 𝐓𝐡𝐢𝐬 𝐛𝐨𝐭 𝐰𝐨𝐫𝐤𝐬 𝐨𝐧𝐥𝐲 𝐢𝐧 𝐚𝐥𝐥𝐨𝐰𝐞𝐝 𝐠𝐫𝐨𝐮𝐩𝐬!"
         )
         return
     
@@ -1414,8 +1404,8 @@ def start_cmd(message):
     
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        InlineKeyboardButton("📢 CHANNEL", url=CHANNEL_LINK),
-        InlineKeyboardButton("👥 GROUP", url=REQUIRED_GROUP_LINK)
+        InlineKeyboardButton("📢 𝐂𝐇𝐀𝐍𝐍𝐄𝐋", url=CHANNEL_LINK),
+        InlineKeyboardButton("👥 𝐆𝐑𝐎𝐔𝐏", url=REQUIRED_GROUP_LINK)
     )
     
     bot.reply_to(message, text, reply_markup=keyboard)
@@ -1431,121 +1421,112 @@ def help_cmd(message):
     
     auto_hour = auto_time_data.get("hour", AUTO_LIKE_HOUR)
     auto_min = auto_time_data.get("minute", AUTO_LIKE_MINUTE)
-    time_suffix = "AM" if auto_hour < 12 else "PM"
+    time_suffix = "𝐀𝐌" if auto_hour < 12 else "𝐏𝐌"
     display_hour = auto_hour if auto_hour <= 12 else auto_hour - 12
     if display_hour == 0:
         display_hour = 12
     time_str = f"{display_hour}:{auto_min:02d} {time_suffix}"
     
-    system_status = "🟢 ON" if is_like_system_on() else "🔴 OFF"
+    system_status = "🟢 𝐎𝐍" if is_like_system_on() else "🔴 𝐎𝐅𝐅"
     regions_str = ", ".join(SUPPORTED_REGIONS)
     
     if is_admin(message.from_user.id):
         text = (
             "╭━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━✪\n"
-            f"│{user_type} COMMAND LIST\n"
+            f"│{user_type} 𝐂𝐎𝐌𝐌𝐀𝐍𝐃 𝐋𝐈𝐒𝐓\n"
             "╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━✪\n\n"
-            "╭━⟮ ✦ 👤 USER COMMANDS ✦ ⟯\n"
-            "│📌 /like <region> <UID> – Send likes to any UID\n"
-            "│📌 /remain – Check your daily remaining limit\n"
-            "│📌 /myid – Get your Telegram ID\n"
-            "│📌 /status – Check bot status and statistics\n"
-            "│📌 /myauto – View your auto like list with expiry\n"
-            "│📌 /regions – Show all supported regions\n"
+            "╭━⟮ ✦ 👤 𝐔𝐒𝐄𝐑 𝐂𝐎𝐌𝐌𝐀𝐍𝐃𝐒 ✦ ⟯\n"
+            "│📌 /like <region> <UID> – 𝐒𝐞𝐧𝐝 𝐥𝐢𝐤𝐞𝐬 𝐭𝐨 𝐚𝐧𝐲 𝐔𝐈𝐃\n"
+            "│📌 /remain – 𝐂𝐡𝐞𝐜𝐤 𝐲𝐨𝐮𝐫 𝐝𝐚𝐢𝐥𝐲 𝐫𝐞𝐦𝐚𝐢𝐧𝐢𝐧𝐠 𝐥𝐢𝐦𝐢𝐭\n"
+            "│📌 /myid – 𝐆𝐞𝐭 𝐲𝐨𝐮𝐫 𝐓𝐞𝐥𝐞𝐠𝐫𝐚𝐦 𝐈𝐃\n"
+            "│📌 /status – 𝐂𝐡𝐞𝐜𝐤 𝐛𝐨𝐭 𝐬𝐭𝐚𝐭𝐮𝐬 𝐚𝐧𝐝 𝐬𝐭𝐚𝐭𝐢𝐬𝐭𝐢𝐜𝐬\n"
+            "│📌 /myauto – 𝐕𝐢𝐞𝐰 𝐲𝐨𝐮𝐫 𝐚𝐮𝐭𝐨 𝐥𝐢𝐤𝐞 𝐥𝐢𝐬𝐭 𝐰𝐢𝐭𝐡 𝐞𝐱𝐩𝐢𝐫𝐲\n"
+            "│📌 /regions – 𝐒𝐡𝐨𝐰 𝐚𝐥𝐥 𝐬𝐮𝐩𝐩𝐨𝐫𝐭𝐞𝐝 𝐫𝐞𝐠𝐢𝐨𝐧𝐬\n"
             "╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━✪\n\n"
-            "╭━⟮ ✦ 👑 ADMIN/OWNER COMMANDS ✦ ⟯\n"
-            "│📌 /task – View auto task information\n"
-            "│📌 /autolike list – List all auto likes with expiry\n"
-            "│📌 /autolike <days> <uid> <tg_userid> [region] – Add auto like\n"
-            "│📌 /removeauto <uid> <tg_userid> – Remove auto like\n"
-            "│📌 /listauto – List all active auto likes\n"
-            "│📌 /userauto <tg_userid> – Check auto likes for a user\n"
-            "│📌 /alt <time> – Change auto task time\n"
-            "│📌 /scheduler – Check scheduler status\n"
-            "│📌 /on – Turn like system ON\n"
-            "│📌 /off – Turn like system OFF\n"
-            "│📌 /addadmin <user_id> – Add new admin (Owner only)\n"
-            "│📌 /removeadmin <user_id> – Remove admin (Owner only)\n"
-            "│📌 /admins – List all admins (Owner only)\n"
-            "│📌 /allow <group_id> – Allow a group (Owner only)\n"
-            "│📌 /addvip <user_id> – Add VIP user (Owner only)\n"
-            "│📌 /removevip <user_id> – Remove VIP user (Owner only)\n"
-            "│📌 /limit <number> – Set user daily limit (Owner only)\n"
-            "│📌 /glimit <number> – Set group daily limit (Owner only)\n"
-            "│📌 /limits – Show all current limits (Owner only)\n"
-            "│📌 /testapi [uid] [region] – Test API connection (Owner only)\n"
-            "│📌 /broadcast <message> – Broadcast message (Owner only)\n"
-            "│📌 /broadcast_preview <message> – Preview broadcast (Owner only)\n"
-            "│📌 /broadcast_stats – Broadcast statistics (Owner only)\n"
-            "│📌 /broadcast_cancel – Cancel pending broadcasts (Owner only)\n"
+            "╭━⟮ ✦ 👑 𝐀𝐃𝐌𝐈𝐍/𝐎𝐖𝐍𝐄𝐑 𝐂𝐎𝐌𝐌𝐀𝐍𝐃𝐒 ✦ ⟯\n"
+            "│📌 /task – 𝐕𝐢𝐞𝐰 𝐚𝐮𝐭𝐨 𝐭𝐚𝐬𝐤 𝐢𝐧𝐟𝐨𝐫𝐦𝐚𝐭𝐢𝐨𝐧\n"
+            "│📌 /autolike list – 𝐋𝐢𝐬𝐭 𝐚𝐥𝐥 𝐚𝐮𝐭𝐨 𝐥𝐢𝐤𝐞𝐬 𝐰𝐢𝐭𝐡 𝐞𝐱𝐩𝐢𝐫𝐲\n"
+            "│📌 /autolike <days> <uid> <tg_userid> [region] – 𝐀𝐝𝐝 𝐚𝐮𝐭𝐨 𝐥𝐢𝐤𝐞\n"
+            "│📌 /removeauto <uid> <tg_userid> – 𝐑𝐞𝐦𝐨𝐯𝐞 𝐚𝐮𝐭𝐨 𝐥𝐢𝐤𝐞\n"
+            "│📌 /listauto – 𝐋𝐢𝐬𝐭 𝐚𝐥𝐥 𝐚𝐜𝐭𝐢𝐯𝐞 𝐚𝐮𝐭𝐨 𝐥𝐢𝐤𝐞𝐬\n"
+            "│📌 /userauto <tg_userid> – 𝐂𝐡𝐞𝐜𝐤 𝐚𝐮𝐭𝐨 𝐥𝐢𝐤𝐞𝐬 𝐟𝐨𝐫 𝐚 𝐮𝐬𝐞𝐫\n"
+            "│📌 /alt <time> – 𝐂𝐡𝐚𝐧𝐠𝐞 𝐚𝐮𝐭𝐨 𝐭𝐚𝐬𝐤 𝐭𝐢𝐦𝐞\n"
+            "│📌 /scheduler – 𝐂𝐡𝐞𝐜𝐤 𝐬𝐜𝐡𝐞𝐝𝐮𝐥𝐞𝐫 𝐬𝐭𝐚𝐭𝐮𝐬\n"
+            "│📌 /on – 𝐓𝐮𝐫𝐧 𝐥𝐢𝐤𝐞 𝐬𝐲𝐬𝐭𝐞𝐦 𝐎𝐍\n"
+            "│📌 /off – 𝐓𝐮𝐫𝐧 𝐥𝐢𝐤𝐞 𝐬𝐲𝐬𝐭𝐞𝐦 𝐎𝐅𝐅\n"
+            "│📌 /addadmin <user_id> – 𝐀𝐝𝐝 𝐧𝐞𝐰 𝐚𝐝𝐦𝐢𝐧 (𝐎𝐰𝐧𝐞𝐫 𝐨𝐧𝐥𝐲)\n"
+            "│📌 /removeadmin <user_id> – 𝐑𝐞𝐦𝐨𝐯𝐞 𝐚𝐝𝐦𝐢𝐧 (𝐎𝐰𝐧𝐞𝐫 𝐨𝐧𝐥𝐲)\n"
+            "│📌 /admins – 𝐋𝐢𝐬𝐭 𝐚𝐥𝐥 𝐚𝐝𝐦𝐢𝐧𝐬 (𝐎𝐰𝐧𝐞𝐫 𝐨𝐧𝐥𝐲)\n"
+            "│📌 /allow <group_id> – 𝐀𝐥𝐥𝐨𝐰 𝐚 𝐠𝐫𝐨𝐮𝐩 (𝐎𝐰𝐧𝐞𝐫 𝐨𝐧𝐥𝐲)\n"
+            "│📌 /addvip <user_id> – 𝐀𝐝𝐝 𝐕𝐈𝐏 𝐮𝐬𝐞𝐫 (𝐎𝐰𝐧𝐞𝐫 𝐨𝐧𝐥𝐲)\n"
+            "│📌 /removevip <user_id> – 𝐑𝐞𝐦𝐨𝐯𝐞 𝐕𝐈𝐏 𝐮𝐬𝐞𝐫 (𝐎𝐰𝐧𝐞𝐫 𝐨𝐧𝐥𝐲)\n"
+            "│📌 /limit <number> – 𝐒𝐞𝐭 𝐮𝐬𝐞𝐫 𝐝𝐚𝐢𝐥𝐲 𝐥𝐢𝐦𝐢𝐭 (𝐎𝐰𝐧𝐞𝐫 𝐨𝐧𝐥𝐲)\n"
+            "│📌 /glimit <number> – 𝐒𝐞𝐭 𝐠𝐫𝐨𝐮𝐩 𝐝𝐚𝐢𝐥𝐲 𝐥𝐢𝐦𝐢𝐭 (𝐎𝐰𝐧𝐞𝐫 𝐨𝐧𝐥𝐲)\n"
+            "│📌 /limits – 𝐒𝐡𝐨𝐰 𝐚𝐥𝐥 𝐜𝐮𝐫𝐫𝐞𝐧𝐭 𝐥𝐢𝐦𝐢𝐭𝐬 (𝐎𝐰𝐧𝐞𝐫 𝐨𝐧𝐥𝐲)\n"
+            "│📌 /testapi [uid] [region] – 𝐓𝐞𝐬𝐭 𝐀𝐏𝐈 𝐜𝐨𝐧𝐧𝐞𝐜𝐭𝐢𝐨𝐧 (𝐎𝐰𝐧𝐞𝐫 𝐨𝐧𝐥𝐲)\n"
+            "│📌 /broadcast <message> – 𝐁𝐫𝐨𝐚𝐝𝐜𝐚𝐬𝐭 𝐦𝐞𝐬𝐬𝐚𝐠𝐞 (𝐎𝐰𝐧𝐞𝐫 𝐨𝐧𝐥𝐲)\n"
             "╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━✪\n\n"
-            "╭━⟮ ✦ ⚙️ CURRENT SETTINGS ✦ ⟯\n"
-            f"│👤 USER LIMIT: {DAILY_LIMIT}/day\n"
-            f"│👥 GROUP LIMIT: {GROUP_DAILY_LIMIT}/day\n"
-            f"│⏰ AUTO TIME: {time_str} (BDT)\n"
-            f"│🔘 SYSTEM: {system_status}\n"
-            f"│🌍 REGIONS: {regions_str}\n"
+            "╭━⟮ ✦ ⚙️ 𝐂𝐔𝐑𝐑𝐄𝐍𝐓 𝐒𝐄𝐓𝐓𝐈𝐍𝐆𝐒 ✦ ⟯\n"
+            f"│👤 𝐔𝐒𝐄𝐑 𝐋𝐈𝐌𝐈𝐓 : {DAILY_LIMIT}/𝐝𝐚𝐲\n"
+            f"│👥 𝐆𝐑𝐎𝐔𝐏 𝐋𝐈𝐌𝐈𝐓 : {GROUP_DAILY_LIMIT}/𝐝𝐚𝐲\n"
+            f"│⏰ 𝐀𝐔𝐓𝐎 𝐓𝐈𝐌𝐄 : {time_str} (𝐁𝐃𝐓)\n"
+            f"│🔘 𝐒𝐘𝐒𝐓𝐄𝐌 : {system_status}\n"
+            f"│🌍 𝐑𝐄𝐆𝐈𝐎𝐍𝐒 : {regions_str}\n"
             "╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━✪\n\n"
-            "╭━⟮ ✦ 📢 REQUIRED TO JOIN ✦ ⟯\n"
-            f"│📢 CHANNEL: {CHANNEL_USERNAME}\n"
-            f"│👥 GROUP: {REQUIRED_GROUP_USERNAME}\n"
+            "╭━⟮ ✦ 📢 𝐑𝐄𝐐𝐔𝐈𝐑𝐄𝐃 𝐓𝐎 𝐉𝐎𝐈𝐍 ✦ ⟯\n"
+            f"│📢 𝐂𝐇𝐀𝐍𝐍𝐄𝐋 : {CHANNEL_USERNAME}\n"
+            f"│👥 𝐆𝐑𝐎𝐔𝐏 : {REQUIRED_GROUP_USERNAME}\n"
             "╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━✪\n\n"
-            "✨ Thank you for using our service! ✨\n\n"
-            "╭━⟮ ✦ 🧾 DETAILS ✦ ⟯\n"
-            f"│🙋🏻 USER: {username}\n"
-            "│👑 OWNER: @riyadalhasan11\n"
-            "│🤖 BOT: @riyadob52likebot\n"
+            "✨ 𝐓𝐡𝐚𝐧𝐤 𝐲𝐨𝐮 𝐟𝐨𝐫 𝐮𝐬𝐢𝐧𝐠 𝐨𝐮𝐫 𝐬𝐞𝐫𝐯𝐢𝐜𝐞! ✨\n\n"
+            "╭━⟮ ✦ 🧾 𝐃𝐄𝐓𝐀𝐈𝐋𝐒 ✦ ⟯\n"
+            f"│🙋🏻 𝐔𝐒𝐄𝐑 : {username}\n"
+            "│👑 𝐎𝐖𝐍𝐄𝐑 : @riyadalhasan11\n"
+            "│🤖 𝐁𝐎𝐓 : @riyadob52likebot\n"
             "╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━✪"
         )
     else:
         text = (
             "╭━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━✪\n"
-            "│📚 USER COMMAND LIST\n"
+            "│📚 𝐔𝐒𝐄𝐑 𝐂𝐎𝐌𝐌𝐀𝐍𝐃 𝐋𝐈𝐒𝐓\n"
             "╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━✪\n\n"
-            "╭━⟮ ✦ 📋 AVAILABLE COMMANDS ✦ ⟯\n"
-            "│📌 /like <region> <UID> – Send likes to any UID\n"
-            "│   └─ Example: /like BD 123456789\n"
+            "╭━⟮ ✦ 📋 𝐀𝐕𝐀𝐈𝐋𝐀𝐁𝐋𝐄 𝐂𝐎𝐌𝐌𝐀𝐍𝐃𝐒 ✦ ⟯\n"
+            "│📌 /like <region> <UID> – 𝐒𝐞𝐧𝐝 𝐥𝐢𝐤𝐞𝐬 𝐭𝐨 𝐚𝐧𝐲 𝐔𝐈𝐃\n"
+            "│   └─ 𝐄𝐱𝐚𝐦𝐩𝐥𝐞 : /like BD 123456789\n"
             "│\n"
-            "│📌 /remain – Check your daily remaining limit\n"
-            "│   └─ Shows used and left likes for today\n"
+            "│📌 /remain – 𝐂𝐡𝐞𝐜𝐤 𝐲𝐨𝐮𝐫 𝐝𝐚𝐢𝐥𝐲 𝐫𝐞𝐦𝐚𝐢𝐧𝐢𝐧𝐠 𝐥𝐢𝐦𝐢𝐭\n"
             "│\n"
-            "│📌 /myid – Get your Telegram ID\n"
-            "│   └─ Shows your unique user ID\n"
+            "│📌 /myid – 𝐆𝐞𝐭 𝐲𝐨𝐮𝐫 𝐓𝐞𝐥𝐞𝐠𝐫𝐚𝐦 𝐈𝐃\n"
             "│\n"
-            "│📌 /status – Check bot status and statistics\n"
-            "│   └─ Shows bot health and daily stats\n"
+            "│📌 /status – 𝐂𝐡𝐞𝐜𝐤 𝐛𝐨𝐭 𝐬𝐭𝐚𝐭𝐮𝐬 𝐚𝐧𝐝 𝐬𝐭𝐚𝐭𝐢𝐬𝐭𝐢𝐜𝐬\n"
             "│\n"
-            "│📌 /myauto – View your auto like list\n"
-            "│   └─ Shows your UIDs with expiry dates\n"
+            "│📌 /myauto – 𝐕𝐢𝐞𝐰 𝐲𝐨𝐮𝐫 𝐚𝐮𝐭𝐨 𝐥𝐢𝐤𝐞 𝐥𝐢𝐬𝐭\n"
             "│\n"
-            "│📌 /regions – Show all supported regions\n"
-            "│   └─ Lists ME, ID, TH, VN, SG, BD, PK, MY, PH, RU, AFR\n"
+            "│📌 /regions – 𝐒𝐡𝐨𝐰 𝐚𝐥𝐥 𝐬𝐮𝐩𝐩𝐨𝐫𝐭𝐞𝐝 𝐫𝐞𝐠𝐢𝐨𝐧𝐬\n"
             "│\n"
-            "│📌 /help – Show this help menu\n"
-            "│   └─ Displays all available commands\n"
+            "│📌 /help – 𝐒𝐡𝐨𝐰 𝐭𝐡𝐢𝐬 𝐡𝐞𝐥𝐩 𝐦𝐞𝐧𝐮\n"
             "╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━✪\n\n"
-            "╭━⟮ ✦ ⚙️ CURRENT LIMITS ✦ ⟯\n"
-            f"│👤 USER LIMIT: {DAILY_LIMIT} likes/day\n"
-            f"│👥 GROUP LIMIT: {GROUP_DAILY_LIMIT} likes/day\n"
-            f"│⏰ AUTO TIME: {time_str} (BDT)\n"
-            f"│🔘 SYSTEM STATUS: {system_status}\n"
-            f"│🌍 SUPPORTED REGIONS: {regions_str}\n"
+            "╭━⟮ ✦ ⚙️ 𝐂𝐔𝐑𝐑𝐄𝐍𝐓 𝐋𝐈𝐌𝐈𝐓𝐒 ✦ ⟯\n"
+            f"│👤 𝐔𝐒𝐄𝐑 𝐋𝐈𝐌𝐈𝐓 : {DAILY_LIMIT} 𝐥𝐢𝐤𝐞𝐬/𝐝𝐚𝐲\n"
+            f"│👥 𝐆𝐑𝐎𝐔𝐏 𝐋𝐈𝐌𝐈𝐓 : {GROUP_DAILY_LIMIT} 𝐥𝐢𝐤𝐞𝐬/𝐝𝐚𝐲\n"
+            f"│⏰ 𝐀𝐔𝐓𝐎 𝐓𝐈𝐌𝐄 : {time_str} (𝐁𝐃𝐓)\n"
+            f"│🔘 𝐒𝐘𝐒𝐓𝐄𝐌 𝐒𝐓𝐀𝐓𝐔𝐒 : {system_status}\n"
+            f"│🌍 𝐒𝐔𝐏𝐏𝐎𝐑𝐓𝐄𝐃 𝐑𝐄𝐆𝐈𝐎𝐍𝐒 : {regions_str}\n"
             "╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━✪\n\n"
-            "╭━⟮ ✦ 📢 REQUIRED TO JOIN ✦ ⟯\n"
-            f"│📢 CHANNEL: {CHANNEL_USERNAME}\n"
-            f"│👥 GROUP: {REQUIRED_GROUP_USERNAME}\n"
-            "│⚠️ You must join both to use the bot!\n"
+            "╭━⟮ ✦ 📢 𝐑𝐄𝐐𝐔𝐈𝐑𝐄𝐃 𝐓𝐎 𝐉𝐎𝐈𝐍 ✦ ⟯\n"
+            f"│📢 𝐂𝐇𝐀𝐍𝐍𝐄𝐋 : {CHANNEL_USERNAME}\n"
+            f"│👥 𝐆𝐑𝐎𝐔𝐏 : {REQUIRED_GROUP_USERNAME}\n"
+            "│⚠️ 𝐘𝐨𝐮 𝐦𝐮𝐬𝐭 𝐣𝐨𝐢𝐧 𝐛𝐨𝐭𝐡 𝐭𝐨 𝐮𝐬𝐞 𝐭𝐡𝐞 𝐛𝐨𝐭!\n"
             "╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━✪\n\n"
-            "╭━⟮ ✦ 💡 TIPS ✦ ⟯\n"
-            "│• Use /regions to see all supported regions\n"
-            "│• Check /myauto to see your auto like expiry\n"
-            "│• Contact owner for VIP benefits\n"
+            "╭━⟮ ✦ 💡 𝐓𝐈𝐏𝐒 ✦ ⟯\n"
+            "│• 𝐔𝐬𝐞 /regions 𝐭𝐨 𝐬𝐞𝐞 𝐚𝐥𝐥 𝐬𝐮𝐩𝐩𝐨𝐫𝐭𝐞𝐝 𝐫𝐞𝐠𝐢𝐨𝐧𝐬\n"
+            "│• 𝐂𝐡𝐞𝐜𝐤 /myauto 𝐭𝐨 𝐬𝐞𝐞 𝐲𝐨𝐮𝐫 𝐚𝐮𝐭𝐨 𝐥𝐢𝐤𝐞 𝐞𝐱𝐩𝐢𝐫𝐲\n"
+            "│• 𝐂𝐨𝐧𝐭𝐚𝐜𝐭 𝐨𝐰𝐧𝐞𝐫 𝐟𝐨𝐫 𝐕𝐈𝐏 𝐛𝐞𝐧𝐞𝐟𝐢𝐭𝐬\n"
             "╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━✪\n\n"
-            "✨ Thank you for using our service! ✨\n\n"
-            "╭━⟮ ✦ 🧾 DETAILS ✦ ⟯\n"
-            f"│🙋🏻 USER: {username}\n"
-            "│👑 OWNER: @riyadalhasan11\n"
-            "│🤖 BOT: @riyadob52likebot\n"
+            "✨ 𝐓𝐡𝐚𝐧𝐤 𝐲𝐨𝐮 𝐟𝐨𝐫 𝐮𝐬𝐢𝐧𝐠 𝐨𝐮𝐫 𝐬𝐞𝐫𝐯𝐢𝐜𝐞! ✨\n\n"
+            "╭━⟮ ✦ 🧾 𝐃𝐄𝐓𝐀𝐈𝐋𝐒 ✦ ⟯\n"
+            f"│🙋🏻 𝐔𝐒𝐄𝐑 : {username}\n"
+            "│👑 𝐎𝐖𝐍𝐄𝐑 : @riyadalhasan11\n"
+            "│🤖 𝐁𝐎𝐓 : @riyadob52likebot\n"
             "╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━✪"
         )
     
@@ -1582,9 +1563,9 @@ def like_cmd(message):
         if not is_allowed(message) and message.from_user.id != OWNER_ID:
             bot.reply_to(message, 
                 "╭━━━━━━━━━━━━━━━✪\n"
-                "│❌ NOT ALLOWED\n"
+                "│❌ 𝐍𝐎𝐓 𝐀𝐋𝐋𝐎𝐖𝐄𝐃\n"
                 "╰━━━━━━━━━━━━━━━✪\n\n"
-                "❌ This bot works only in allowed groups!"
+                "❌ 𝐓𝐡𝐢𝐬 𝐛𝐨𝐭 𝐰𝐨𝐫𝐤𝐬 𝐨𝐧𝐥𝐲 𝐢𝐧 𝐚𝐥𝐥𝐨𝐰𝐞𝐝 𝐠𝐫𝐨𝐮𝐩𝐬!"
             )
             return
 
@@ -1592,9 +1573,9 @@ def like_cmd(message):
             bot.reply_to(
                 message,
                 "╭━━━━━━━━━━━━━━━✪\n"
-                "│⚠️ RATE LIMIT\n"
+                "│⚠️ 𝐑𝐀𝐓𝐄 𝐋𝐈𝐌𝐈𝐓\n"
                 "╰━━━━━━━━━━━━━━━✪\n\n"
-                "⚠️ Too many requests! Please wait a minute."
+                "⚠️ 𝐓𝐨𝐨 𝐦𝐚𝐧𝐲 𝐫𝐞𝐪𝐮𝐞𝐬𝐭𝐬! 𝐏𝐥𝐞𝐚𝐬𝐞 𝐰𝐚𝐢𝐭 𝐚 𝐦𝐢𝐧𝐮𝐭𝐞."
             )
             return
 
@@ -1604,11 +1585,11 @@ def like_cmd(message):
             bot.reply_to(
                 message,
                 "╭━━━━━━━━━━━━━━━✪\n"
-                "│⚠️ INVALID FORMAT\n"
+                "│⚠️ 𝐈𝐍𝐕𝐀𝐋𝐈𝐃 𝐅𝐎𝐑𝐌𝐀𝐓\n"
                 "╰━━━━━━━━━━━━━━━✪\n\n"
                 f"📌 /like <region> <UID>\n"
-                f"🌍 Supported: {', '.join(SUPPORTED_REGIONS)}\n"
-                "🔰 Example: /like BD 123456789"
+                f"🌍 𝐒𝐮𝐩𝐩𝐨𝐫𝐭𝐞𝐝 : {', '.join(SUPPORTED_REGIONS)}\n"
+                "🔰 𝐄𝐱𝐚𝐦𝐩𝐥𝐞 : /like BD 123456789"
             )
             return
 
@@ -1619,10 +1600,10 @@ def like_cmd(message):
             bot.reply_to(
                 message,
                 "╭━━━━━━━━━━━━━━━✪\n"
-                "│❌ UNSUPPORTED REGION\n"
+                "│❌ 𝐔𝐍𝐒𝐔𝐏𝐏𝐎𝐑𝐓𝐄𝐃 𝐑𝐄𝐆𝐈𝐎𝐍\n"
                 "╰━━━━━━━━━━━━━━━✪\n\n"
-                f"🌍 {region} is not supported!\n\n"
-                f"✅ Supported: {', '.join(SUPPORTED_REGIONS)}"
+                f"🌍 {region} 𝐢𝐬 𝐧𝐨𝐭 𝐬𝐮𝐩𝐩𝐨𝐫𝐭𝐞𝐝!\n\n"
+                f"✅ 𝐒𝐮𝐩𝐩𝐨𝐫𝐭𝐞𝐝 : {', '.join(SUPPORTED_REGIONS)}"
             )
             return
 
@@ -1630,9 +1611,9 @@ def like_cmd(message):
             bot.reply_to(
                 message,
                 "╭━━━━━━━━━━━━━━━✪\n"
-                "│⚠️ INVALID UID\n"
+                "│⚠️ 𝐈𝐍𝐕𝐀𝐋𝐈𝐃 𝐔𝐈𝐃\n"
                 "╰━━━━━━━━━━━━━━━✪\n\n"
-                "📏 UID must be 5-15 digits"
+                "📏 𝐔𝐈𝐃 𝐦𝐮𝐬𝐭 𝐛𝐞 5-15 𝐝𝐢𝐠𝐢𝐭𝐬"
             )
             return
 
@@ -1646,11 +1627,11 @@ def like_cmd(message):
                 bot.reply_to(
                     message,
                     "╭━━━━━━━━━━━━━━━✪\n"
-                    "│🚫 DAILY LIMIT REACHED\n"
+                    "│🚫 𝐃𝐀𝐈𝐋𝐘 𝐋𝐈𝐌𝐈𝐓 𝐑𝐄𝐀𝐂𝐇𝐄𝐃\n"
                     "╰━━━━━━━━━━━━━━━✪\n\n"
-                    f"📊 Used: {used}/{DAILY_LIMIT}\n\n"
-                    "🌟 Get VIP for unlimited likes!\n"
-                    "📲 Contact @riyadalhasan11"
+                    f"📊 𝐔𝐬𝐞𝐝 : {used}/{DAILY_LIMIT}\n\n"
+                    "🌟 𝐆𝐞𝐭 𝐕𝐈𝐏 𝐟𝐨𝐫 𝐮𝐧𝐥𝐢𝐦𝐢𝐭𝐞𝐝 𝐥𝐢𝐤𝐞𝐬!\n"
+                    "📲 𝐂𝐨𝐧𝐭𝐚𝐜𝐭 @riyadalhasan11"
                 )
                 return
 
@@ -1660,9 +1641,9 @@ def like_cmd(message):
                 bot.reply_to(
                     message,
                     "╭━━━━━━━━━━━━━━━✪\n"
-                    "│🚫 GROUP LIMIT REACHED\n"
+                    "│🚫 𝐆𝐑𝐎𝐔𝐏 𝐋𝐈𝐌𝐈𝐓 𝐑𝐄𝐀𝐂𝐇𝐄𝐃\n"
                     "╰━━━━━━━━━━━━━━━✪\n\n"
-                    f"📊 Group Used: {group_used}/{GROUP_DAILY_LIMIT}"
+                    f"📊 𝐆𝐫𝐨𝐮𝐩 𝐔𝐬𝐞𝐝 : {group_used}/{GROUP_DAILY_LIMIT}"
                 )
                 return
 
@@ -1692,8 +1673,8 @@ def like_cmd(message):
 
         kb = InlineKeyboardMarkup(row_width=2)
         kb.add(
-            InlineKeyboardButton("📢 CHANNEL", url=CHANNEL_LINK),
-            InlineKeyboardButton("👥 GROUP", url=REQUIRED_GROUP_LINK)
+            InlineKeyboardButton("📢 𝐂𝐇𝐀𝐍𝐍𝐄𝐋", url=CHANNEL_LINK),
+            InlineKeyboardButton("👥 𝐆𝐑𝐎𝐔𝐏", url=REQUIRED_GROUP_LINK)
         )
         
         try:
@@ -1726,7 +1707,7 @@ def remain_cmd(message):
         group_info = ""
         if message.chat.type in ['group', 'supergroup']:
             group_used = get_group_daily_usage(message.chat.id)
-            group_info = f"│👥 GROUP: {group_used}/{GROUP_DAILY_LIMIT}\n"
+            group_info = f"│👥 𝐆𝐑𝐎𝐔𝐏 : {group_used}/{GROUP_DAILY_LIMIT}\n"
         
         text = format_remain(user_name, user_type, used, DAILY_LIMIT, group_info, username)
     
@@ -1758,7 +1739,7 @@ def status_cmd(message):
     
     auto_hour = auto_time_data.get("hour", AUTO_LIKE_HOUR)
     auto_min = auto_time_data.get("minute", AUTO_LIKE_MINUTE)
-    time_suffix = "AM" if auto_hour < 12 else "PM"
+    time_suffix = "𝐀𝐌" if auto_hour < 12 else "𝐏𝐌"
     display_hour = auto_hour if auto_hour <= 12 else auto_hour - 12
     if display_hour == 0:
         display_hour = 12
@@ -1770,7 +1751,7 @@ def status_cmd(message):
     total_likes_today = sum(data["used"] for data in like_tracker.values() 
                            if isinstance(data, dict) and data.get("date") == today_bd)
     
-    system_status_text = "🟢 ON" if is_like_system_on() else "🔴 OFF"
+    system_status_text = "🟢 𝐎𝐍" if is_like_system_on() else "🔴 𝐎𝐅𝐅"
     active_auto = len(get_all_active_auto_likes())
     
     expiring_soon = 0
@@ -1782,34 +1763,34 @@ def status_cmd(message):
     
     text = (
         "╭━━━━━━━━━━━━━━━✪\n"
-        "│🤖 BOT STATUS\n"
+        "│🤖 𝐁𝐎𝐓 𝐒𝐓𝐀𝐓𝐔𝐒\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ 👤 YOUR STATUS ✦ ⟯\n"
+        "╭━⟮ ✦ 👤 𝐘𝐎𝐔𝐑 𝐒𝐓𝐀𝐓𝐔𝐒 ✦ ⟯\n"
         f"│👤 {user_type}\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ 🤖 BOT INFO ✦ ⟯\n"
-        "│✅ Status: ONLINE\n"
-        f"│👑 Owner: {OWNER_ID}\n"
-        f"│📊 User Limit: {DAILY_LIMIT}\n"
-        f"│👥 Group Limit: {GROUP_DAILY_LIMIT}\n"
-        f"│⏰ Auto: {time_str}\n"
-        f"│🔘 System: {system_status_text}\n"
-        f"│🌏 Timezone: BDT (UTC+6)\n"
-        f"│🌍 Regions: {len(SUPPORTED_REGIONS)}\n"
-        f"│🌟 VIP: {len(VIP_USERS)}\n"
-        f"│🛡️ Admins: {len(ADMIN_USERS)}\n"
-        f"│⚡ Auto UIDs: {len(AUTO_LIKE_UIDS)}\n"
-        f"│👤 Auto Users: {active_auto}\n"
-        f"│⚠️ Expiring Soon: {expiring_soon}\n"
+        "╭━⟮ ✦ 🤖 𝐁𝐎𝐓 𝐈𝐍𝐅𝐎 ✦ ⟯\n"
+        "│✅ 𝐒𝐭𝐚𝐭𝐮𝐬 : 𝐎𝐍𝐋𝐈𝐍𝐄\n"
+        f"│👑 𝐎𝐰𝐧𝐞𝐫 : {OWNER_ID}\n"
+        f"│📊 𝐔𝐬𝐞𝐫 𝐋𝐢𝐦𝐢𝐭 : {DAILY_LIMIT}\n"
+        f"│👥 𝐆𝐫𝐨𝐮𝐩 𝐋𝐢𝐦𝐢𝐭 : {GROUP_DAILY_LIMIT}\n"
+        f"│⏰ 𝐀𝐮𝐭𝐨 : {time_str}\n"
+        f"│🔘 𝐒𝐲𝐬𝐭𝐞𝐦 : {system_status_text}\n"
+        f"│🌏 𝐓𝐢𝐦𝐞𝐳𝐨𝐧𝐞 : 𝐁𝐃𝐓 (𝐔𝐓𝐂+6)\n"
+        f"│🌍 𝐑𝐞𝐠𝐢𝐨𝐧𝐬 : {len(SUPPORTED_REGIONS)}\n"
+        f"│🌟 𝐕𝐈𝐏 : {len(VIP_USERS)}\n"
+        f"│🛡️ 𝐀𝐝𝐦𝐢𝐧𝐬 : {len(ADMIN_USERS)}\n"
+        f"│⚡ 𝐀𝐮𝐭𝐨 𝐔𝐈𝐃𝐬 : {len(AUTO_LIKE_UIDS)}\n"
+        f"│👤 𝐀𝐮𝐭𝐨 𝐔𝐬𝐞𝐫𝐬 : {active_auto}\n"
+        f"│⚠️ 𝐄𝐱𝐩𝐢𝐫𝐢𝐧𝐠 𝐒𝐨𝐨𝐧 : {expiring_soon}\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ 📈 TODAY'S STATS ✦ ⟯\n"
-        f"│👤 Active: {total_users_today}\n"
-        f"│❤️ Likes: {total_likes_today}\n"
-        f"│🕒 Current: {now_bd.strftime('%I:%M %p')}\n"
+        "╭━⟮ ✦ 📈 𝐓𝐎𝐃𝐀𝐘'𝐒 𝐒𝐓𝐀𝐓𝐒 ✦ ⟯\n"
+        f"│👤 𝐀𝐜𝐭𝐢𝐯𝐞 : {total_users_today}\n"
+        f"│❤️ 𝐋𝐢𝐤𝐞𝐬 : {total_likes_today}\n"
+        f"│🕒 𝐂𝐮𝐫𝐫𝐞𝐧𝐭 : {now_bd.strftime('%I:%M %p')}\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "✨ Thank you for using our service! ✨\n\n"
-        "╭━⟮ ✦ 🧾 DETAILS ✦ ⟯\n"
-        f"│🙋🏻User: {username}\n"
+        "✨ 𝐓𝐡𝐚𝐧𝐤 𝐲𝐨𝐮 𝐟𝐨𝐫 𝐮𝐬𝐢𝐧𝐠 𝐨𝐮𝐫 𝐬𝐞𝐫𝐯𝐢𝐜𝐞! ✨\n\n"
+        "╭━⟮ ✦ 🧾 𝐃𝐄𝐓𝐀𝐈𝐋𝐒 ✦ ⟯\n"
+        f"│🙋🏻 𝐔𝐬𝐞𝐫 : {username}\n"
         "╰━━━━━━━━━━━━━━━✪"
     )
     
@@ -1820,11 +1801,11 @@ def status_cmd(message):
 @bot.message_handler(commands=['task'])
 def task_cmd(message):
     if not is_admin(message.from_user.id):
-        bot.reply_to(message, "❌ This command is only for bot owner and admins!")
+        bot.reply_to(message, "❌ 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐨𝐧𝐥𝐲 𝐟𝐨𝐫 𝐛𝐨𝐭 𝐨𝐰𝐧𝐞𝐫 𝐚𝐧𝐝 𝐚𝐝𝐦𝐢𝐧𝐬!")
         return
     
     if not AUTO_LIKE_UIDS:
-        bot.reply_to(message, "📭 Auto like list is empty!")
+        bot.reply_to(message, "📭 𝐀𝐮𝐭𝐨 𝐥𝐢𝐤𝐞 𝐥𝐢𝐬𝐭 𝐢𝐬 𝐞𝐦𝐩𝐭𝐲!")
         return
     
     auto_hour = auto_time_data.get("hour", AUTO_LIKE_HOUR)
@@ -1839,7 +1820,7 @@ def task_cmd(message):
     hours_until = int(time_diff.total_seconds() // 3600)
     minutes_until = int((time_diff.total_seconds() % 3600) // 60)
     
-    time_suffix = "AM" if auto_hour < 12 else "PM"
+    time_suffix = "𝐀𝐌" if auto_hour < 12 else "𝐏𝐌"
     display_hour = auto_hour if auto_hour <= 12 else auto_hour - 12
     if display_hour == 0:
         display_hour = 12
@@ -1856,36 +1837,36 @@ def task_cmd(message):
                 days_left = get_remaining_days(expiry) if expiry else None
                 if days_left is not None:
                     if days_left < 0:
-                        expiry_info = " [EXPIRED]"
+                        expiry_info = " [𝐄𝐗𝐏𝐈𝐑𝐄𝐃]"
                     elif days_left == 0:
-                        expiry_info = " [EXPIRES TODAY]"
+                        expiry_info = " [𝐄𝐗𝐏𝐈𝐑𝐄𝐒 𝐓𝐎𝐃𝐀𝐘]"
                     elif days_left <= 3:
-                        expiry_info = f" [{days_left} DAYS LEFT]"
+                        expiry_info = f" [{days_left} 𝐃𝐀𝐘𝐒 𝐋𝐄𝐅𝐓]"
                 break
         uid_list_text += f"│{i}. {uid} ({region}){expiry_info}\n"
     if len(AUTO_LIKE_UIDS) > 15:
-        uid_list_text += f"│... and {len(AUTO_LIKE_UIDS) - 15} more\n"
+        uid_list_text += f"│... 𝐚𝐧𝐝 {len(AUTO_LIKE_UIDS) - 15} 𝐦𝐨𝐫𝐞\n"
     
     text = (
         "╭━━━━━━━━━━━━━━━✪\n"
-        "│📋 AUTO LIKE INFORMATION\n"
+        "│📋 𝐀𝐔𝐓𝐎 𝐋𝐈𝐊𝐄 𝐈𝐍𝐅𝐎𝐑𝐌𝐀𝐓𝐈𝐎𝐍\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ ⏰ SCHEDULE INFO ✦ ⟯\n"
-        f"│🕒 Auto Time: {time_str} (daily)\n"
-        f"│⏳ Next Run: in {hours_until}h {minutes_until}m\n"
-        f"│📊 Total UIDs: {len(AUTO_LIKE_UIDS)}\n"
+        "╭━⟮ ✦ ⏰ 𝐒𝐂𝐇𝐄𝐃𝐔𝐋𝐄 𝐈𝐍𝐅𝐎 ✦ ⟯\n"
+        f"│🕒 𝐀𝐮𝐭𝐨 𝐓𝐢𝐦𝐞 : {time_str} (𝐝𝐚𝐢𝐥𝐲)\n"
+        f"│⏳ 𝐍𝐞𝐱𝐭 𝐑𝐮𝐧 : 𝐢𝐧 {hours_until}𝐡 {minutes_until}𝐦\n"
+        f"│📊 𝐓𝐨𝐭𝐚𝐥 𝐔𝐈𝐃𝐬 : {len(AUTO_LIKE_UIDS)}\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ 🆔 UID LIST ✦ ⟯\n"
+        "╭━⟮ ✦ 🆔 𝐔𝐈𝐃 𝐋𝐈𝐒𝐓 ✦ ⟯\n"
         f"{uid_list_text}"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "✨ Admin/Owner only command ✨"
+        "✨ 𝐀𝐝𝐦𝐢𝐧/𝐎𝐰𝐧𝐞𝐫 𝐨𝐧𝐥𝐲 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 ✨"
     )
     bot.reply_to(message, text)
 
 @bot.message_handler(commands=['autolike'])
 def add_auto_like_cmd(message):
     if not is_admin(message.from_user.id):
-        bot.reply_to(message, "❌ This command is only for bot owner and admins!")
+        bot.reply_to(message, "❌ 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐨𝐧𝐥𝐲 𝐟𝐨𝐫 𝐛𝐨𝐭 𝐨𝐰𝐧𝐞𝐫 𝐚𝐧𝐝 𝐚𝐝𝐦𝐢𝐧𝐬!")
         return
     
     args = message.text.split()
@@ -1898,15 +1879,15 @@ def add_auto_like_cmd(message):
         bot.reply_to(
             message,
             "╭━━━━━━━━━━━━━━━✪\n"
-            "│⚠️ AUTO LIKE USAGE\n"
+            "│⚠️ 𝐀𝐔𝐓𝐎 𝐋𝐈𝐊𝐄 𝐔𝐒𝐀𝐆𝐄\n"
             "╰━━━━━━━━━━━━━━━✪\n\n"
-            "📌 /autolike list - View all auto likes\n\n"
+            "📌 /autolike list - 𝐕𝐢𝐞𝐰 𝐚𝐥𝐥 𝐚𝐮𝐭𝐨 𝐥𝐢𝐤𝐞𝐬\n\n"
             "📌 /autolike <days> <uid> <tg_user_id> [region]\n\n"
-            "🔰 Examples:\n"
+            "🔰 𝐄𝐱𝐚𝐦𝐩𝐥𝐞𝐬:\n"
             "• /autolike 30 123456789 7603719412 BD\n"
             "• /autolike 7 987654321 1234567890 ID\n\n"
-            f"🌍 Regions: {', '.join(SUPPORTED_REGIONS)}\n"
-            "📅 Days: Number of days auto like will work"
+            f"🌍 𝐑𝐞𝐠𝐢𝐨𝐧𝐬 : {', '.join(SUPPORTED_REGIONS)}\n"
+            "📅 𝐃𝐚𝐲𝐬 : 𝐍𝐮𝐦𝐛𝐞𝐫 𝐨𝐟 𝐝𝐚𝐲𝐬 𝐚𝐮𝐭𝐨 𝐥𝐢𝐤𝐞 𝐰𝐢𝐥𝐥 𝐰𝐨𝐫𝐤"
         )
         return
     
@@ -1917,15 +1898,15 @@ def add_auto_like_cmd(message):
         region = args[4].upper() if len(args) == 5 else "BD"
         
         if days <= 0:
-            bot.reply_to(message, "❌ Days must be greater than 0!")
+            bot.reply_to(message, "❌ 𝐃𝐚𝐲𝐬 𝐦𝐮𝐬𝐭 𝐛𝐞 𝐠𝐫𝐞𝐚𝐭𝐞𝐫 𝐭𝐡𝐚𝐧 0!")
             return
         
         if not uid.isdigit() or len(uid) < 5 or len(uid) > 15:
-            bot.reply_to(message, "❌ Invalid UID! Must be 5-15 digits.")
+            bot.reply_to(message, "❌ 𝐈𝐧𝐯𝐚𝐥𝐢𝐝 𝐔𝐈𝐃! 𝐌𝐮𝐬𝐭 𝐛𝐞 5-15 𝐝𝐢𝐠𝐢𝐭𝐬.")
             return
         
         if region not in SUPPORTED_REGIONS:
-            bot.reply_to(message, f"❌ Invalid region! Supported: {', '.join(SUPPORTED_REGIONS)}")
+            bot.reply_to(message, f"❌ 𝐈𝐧𝐯𝐚𝐥𝐢𝐝 𝐫𝐞𝐠𝐢𝐨𝐧! 𝐒𝐮𝐩𝐩𝐨𝐫𝐭𝐞𝐝 : {', '.join(SUPPORTED_REGIONS)}")
             return
         
         success, msg = add_auto_like_for_user(tg_user_id, uid, days, region)
@@ -1935,7 +1916,7 @@ def add_auto_like_cmd(message):
             try:
                 auto_hour = auto_time_data.get("hour", AUTO_LIKE_HOUR)
                 auto_min = auto_time_data.get("minute", AUTO_LIKE_MINUTE)
-                time_suffix = "AM" if auto_hour < 12 else "PM"
+                time_suffix = "𝐀𝐌" if auto_hour < 12 else "𝐏𝐌"
                 display_hour = auto_hour if auto_hour <= 12 else auto_hour - 12
                 if display_hour == 0:
                     display_hour = 12
@@ -1945,28 +1926,28 @@ def add_auto_like_cmd(message):
                 
                 notify_text = (
                     "╭━━━━━━━━━━━━━━━✪\n"
-                    "│✨ AUTO LIKE ASSIGNED\n"
+                    "│✨ 𝐀𝐔𝐓𝐎 𝐋𝐈𝐊𝐄 𝐀𝐒𝐒𝐈𝐆𝐍𝐄𝐃\n"
                     "╰━━━━━━━━━━━━━━━✪\n\n"
-                    f"🆔 UID: {uid}\n"
-                    f"🌍 Region: {region}\n"
-                    f"📅 Days: {days}\n"
-                    f"📆 Expires: {expiry_date}\n"
-                    f"⏰ Time: {auto_time_str} BDT\n\n"
-                    "✨ Auto like will run daily!\n"
-                    "📊 Check with /myauto"
+                    f"🆔 𝐔𝐈𝐃 : {uid}\n"
+                    f"🌍 𝐑𝐞𝐠𝐢𝐨𝐧 : {region}\n"
+                    f"📅 𝐃𝐚𝐲𝐬 : {days}\n"
+                    f"📆 𝐄𝐱𝐩𝐢𝐫𝐞𝐬 : {expiry_date}\n"
+                    f"⏰ 𝐓𝐢𝐦𝐞 : {auto_time_str} 𝐁𝐃𝐓\n\n"
+                    "✨ 𝐀𝐮𝐭𝐨 𝐥𝐢𝐤𝐞 𝐰𝐢𝐥𝐥 𝐫𝐮𝐧 𝐝𝐚𝐢𝐥𝐲!\n"
+                    "📊 𝐂𝐡𝐞𝐜𝐤 𝐰𝐢𝐭𝐡 /myauto"
                 )
                 bot.send_message(tg_user_id, notify_text)
             except:
                 pass
                 
     except ValueError:
-        bot.reply_to(message, "❌ Invalid input! Days and User ID must be numbers.")
+        bot.reply_to(message, "❌ 𝐈𝐧𝐯𝐚𝐥𝐢𝐝 𝐢𝐧𝐩𝐮𝐭! 𝐃𝐚𝐲𝐬 𝐚𝐧𝐝 𝐔𝐬𝐞𝐫 𝐈𝐃 𝐦𝐮𝐬𝐭 𝐛𝐞 𝐧𝐮𝐦𝐛𝐞𝐫𝐬.")
     except IndexError:
-        bot.reply_to(message, "❌ Usage: /autolike <days> <uid> <tg_user_id> [region]")
+        bot.reply_to(message, "❌ 𝐔𝐬𝐚𝐠𝐞 : /autolike <days> <uid> <tg_user_id> [region]")
 
 def show_auto_like_list(message):
     if not AUTO_LIKE_USERS:
-        bot.reply_to(message, "📭 No auto likes configured yet!\n\nUse: /autolike <days> <uid> <tg_user_id> [region]")
+        bot.reply_to(message, "📭 𝐍𝐨 𝐚𝐮𝐭𝐨 𝐥𝐢𝐤𝐞𝐬 𝐜𝐨𝐧𝐟𝐢𝐠𝐮𝐫𝐞𝐝 𝐲𝐞𝐭!\n\n𝐔𝐬𝐞 : /autolike <days> <uid> <tg_user_id> [region]")
         return
     
     today_bd = datetime.now(BANGLADESH_TZ).date()
@@ -1992,35 +1973,35 @@ def show_auto_like_list(message):
             region_stats[region] = region_stats.get(region, 0) + 1
     
     text = "╭━━━━━━━━━━━━━━━✪\n"
-    text += "│📋 AUTO LIKE LIST\n"
+    text += "│📋 𝐀𝐔𝐓𝐎 𝐋𝐈𝐊𝐄 𝐋𝐈𝐒𝐓\n"
     text += "╰━━━━━━━━━━━━━━━✪\n\n"
     
-    text += "╭━⟮ ✦ 📊 STATISTICS ✦ ⟯\n"
-    text += f"│📌 Total UIDs: {total_uids}\n"
-    text += f"│👤 Total Users: {len(AUTO_LIKE_USERS)}\n"
-    text += f"│⚠️ Expiring soon (≤3 days): {expiring_soon}\n"
-    text += f"│❌ Expired: {expired_count}\n"
+    text += "╭━⟮ ✦ 📊 𝐒𝐓𝐀𝐓𝐈𝐒𝐓𝐈𝐂𝐒 ✦ ⟯\n"
+    text += f"│📌 𝐓𝐨𝐭𝐚𝐥 𝐔𝐈𝐃𝐬 : {total_uids}\n"
+    text += f"│👤 𝐓𝐨𝐭𝐚𝐥 𝐔𝐬𝐞𝐫𝐬 : {len(AUTO_LIKE_USERS)}\n"
+    text += f"│⚠️ 𝐄𝐱𝐩𝐢𝐫𝐢𝐧𝐠 𝐬𝐨𝐨𝐧 (≤3 𝐝𝐚𝐲𝐬) : {expiring_soon}\n"
+    text += f"│❌ 𝐄𝐱𝐩𝐢𝐫𝐞𝐝 : {expired_count}\n"
     text += "╰━━━━━━━━━━━━━━━✪\n\n"
     
     if region_stats:
-        text += "╭━⟮ ✦ 🌍 REGION WISE ✦ ⟯\n"
+        text += "╭━⟮ ✦ 🌍 𝐑𝐄𝐆𝐈𝐎𝐍 𝐖𝐈𝐒𝐄 ✦ ⟯\n"
         for region, count in sorted(region_stats.items(), key=lambda x: x[1], reverse=True):
-            text += f"│{region}: {count} UID(s)\n"
+            text += f"│{region} : {count} 𝐔𝐈𝐃(𝐬)\n"
         text += "╰━━━━━━━━━━━━━━━✪\n\n"
     
-    text += "╭━⟮ ✦ 📋 DETAILED LIST ✦ ⟯\n"
+    text += "╭━⟮ ✦ 📋 𝐃𝐄𝐓𝐀𝐈𝐋𝐄𝐃 𝐋𝐈𝐒𝐓 ✦ ⟯\n"
     
     for tg_user_id, uids in AUTO_LIKE_USERS.items():
         try:
             chat = bot.get_chat(int(tg_user_id))
-            user_name = chat.first_name if chat.first_name else f"User {tg_user_id}"
+            user_name = chat.first_name if chat.first_name else f"𝐔𝐬𝐞𝐫 {tg_user_id}"
             if chat.username:
                 user_name += f" (@{chat.username})"
         except:
-            user_name = f"User {tg_user_id}"
+            user_name = f"𝐔𝐬𝐞𝐫 {tg_user_id}"
         
         text += f"\n╭━⟮ 👤 {user_name} ⟯\n"
-        text += f"│🆔 ID: {tg_user_id}\n"
+        text += f"│🆔 𝐈𝐃 : {tg_user_id}\n"
         
         for uid, data in uids.items():
             expiry = data.get('expiry_date')
@@ -2030,28 +2011,28 @@ def show_auto_like_list(message):
             
             if days_left is not None:
                 if days_left < 0:
-                    status = "❌ EXPIRED"
+                    status = "❌ 𝐄𝐗𝐏𝐈𝐑𝐄𝐃"
                 elif days_left == 0:
-                    status = "⚠️ EXPIRES TODAY"
+                    status = "⚠️ 𝐄𝐗𝐏𝐈𝐑𝐄𝐒 𝐓𝐎𝐃𝐀𝐘"
                 elif days_left <= 3:
-                    status = f"⚠️ {days_left} DAYS LEFT"
+                    status = f"⚠️ {days_left} 𝐃𝐀𝐘𝐒 𝐋𝐄𝐅𝐓"
                 else:
-                    status = f"✅ {days_left} DAYS LEFT"
+                    status = f"✅ {days_left} 𝐃𝐀𝐘𝐒 𝐋𝐄𝐅𝐓"
             else:
-                status = "✅ ACTIVE"
+                status = "✅ 𝐀𝐂𝐓𝐈𝐕𝐄"
             
             text += f"│\n"
-            text += f"│   🆔 UID: {uid}\n"
-            text += f"│   🌍 Region: {region}\n"
-            text += f"│   📅 Added: {added_date}\n"
-            text += f"│   📆 Expires: {expiry}\n"
-            text += f"│   📊 Status: {status}\n"
+            text += f"│   🆔 𝐔𝐈𝐃 : {uid}\n"
+            text += f"│   🌍 𝐑𝐞𝐠𝐢𝐨𝐧 : {region}\n"
+            text += f"│   📅 𝐀𝐝𝐝𝐞𝐝 : {added_date}\n"
+            text += f"│   📆 𝐄𝐱𝐩𝐢𝐫𝐞𝐬 : {expiry}\n"
+            text += f"│   📊 𝐒𝐭𝐚𝐭𝐮𝐬 : {status}\n"
             text += f"│   {'─' * 25}\n"
         
         text += "╰━━━━━━━━━━━━━━━✪\n"
     
-    text += "\n✨ Use /removeauto <uid> <tg_user_id> to remove\n"
-    text += "📊 Users can check their auto likes with /myauto"
+    text += "\n✨ 𝐔𝐬𝐞 /removeauto <uid> <tg_user_id> 𝐭𝐨 𝐫𝐞𝐦𝐨𝐯𝐞\n"
+    text += "📊 𝐔𝐬𝐞𝐫𝐬 𝐜𝐚𝐧 𝐜𝐡𝐞𝐜𝐤 𝐭𝐡𝐞𝐢𝐫 𝐚𝐮𝐭𝐨 𝐥𝐢𝐤𝐞𝐬 𝐰𝐢𝐭𝐡 /myauto"
     
     if len(text) > 4096:
         for i in range(0, len(text), 4096):
@@ -2062,13 +2043,13 @@ def show_auto_like_list(message):
 @bot.message_handler(commands=['removeauto'])
 def remove_auto_like_cmd(message):
     if not is_admin(message.from_user.id):
-        bot.reply_to(message, "❌ This command is only for bot owner and admins!")
+        bot.reply_to(message, "❌ 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐨𝐧𝐥𝐲 𝐟𝐨𝐫 𝐛𝐨𝐭 𝐨𝐰𝐧𝐞𝐫 𝐚𝐧𝐝 𝐚𝐝𝐦𝐢𝐧𝐬!")
         return
     
     args = message.text.split()
     
     if len(args) != 3:
-        bot.reply_to(message, "❌ Usage: /removeauto <uid> <tg_user_id>")
+        bot.reply_to(message, "❌ 𝐔𝐬𝐚𝐠𝐞 : /removeauto <uid> <tg_user_id>")
         return
     
     uid = args[1]
@@ -2082,19 +2063,19 @@ def remove_auto_like_cmd(message):
             try:
                 bot.send_message(tg_user_id, 
                     "╭━━━━━━━━━━━━━━━✪\n"
-                    "│❌ AUTO LIKE REMOVED\n"
+                    "│❌ 𝐀𝐔𝐓𝐎 𝐋𝐈𝐊𝐄 𝐑𝐄𝐌𝐎𝐕𝐄𝐃\n"
                     "╰━━━━━━━━━━━━━━━✪\n\n"
-                    f"🆔 UID: {uid}\n\n"
-                    "✨ Auto like has been removed! ✨")
+                    f"🆔 𝐔𝐈𝐃 : {uid}\n\n"
+                    "✨ 𝐀𝐮𝐭𝐨 𝐥𝐢𝐤𝐞 𝐡𝐚𝐬 𝐛𝐞𝐞𝐧 𝐫𝐞𝐦𝐨𝐯𝐞𝐝! ✨")
             except:
                 pass
     except ValueError:
-        bot.reply_to(message, "❌ Invalid TG User ID!")
+        bot.reply_to(message, "❌ 𝐈𝐧𝐯𝐚𝐥𝐢𝐝 𝐓𝐆 𝐔𝐬𝐞𝐫 𝐈𝐃!")
 
 @bot.message_handler(commands=['listauto'])
 def list_auto_cmd(message):
     if not is_admin(message.from_user.id):
-        bot.reply_to(message, "❌ This command is only for bot owner and admins!")
+        bot.reply_to(message, "❌ 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐨𝐧𝐥𝐲 𝐟𝐨𝐫 𝐛𝐨𝐭 𝐨𝐰𝐧𝐞𝐫 𝐚𝐧𝐝 𝐚𝐝𝐦𝐢𝐧𝐬!")
         return
     
     text = format_all_auto_likes()
@@ -2103,12 +2084,12 @@ def list_auto_cmd(message):
 @bot.message_handler(commands=['userauto'])
 def user_auto_cmd(message):
     if not is_admin(message.from_user.id):
-        bot.reply_to(message, "❌ This command is only for bot owner and admins!")
+        bot.reply_to(message, "❌ 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐨𝐧𝐥𝐲 𝐟𝐨𝐫 𝐛𝐨𝐭 𝐨𝐰𝐧𝐞𝐫 𝐚𝐧𝐝 𝐚𝐝𝐦𝐢𝐧𝐬!")
         return
     
     args = message.text.split()
     if len(args) != 2:
-        bot.reply_to(message, "❌ Usage: /userauto <tg_user_id>")
+        bot.reply_to(message, "❌ 𝐔𝐬𝐚𝐠𝐞 : /userauto <tg_user_id>")
         return
     
     try:
@@ -2116,15 +2097,15 @@ def user_auto_cmd(message):
         user_auto_likes = get_user_auto_likes(int(tg_user_id))
         
         if not user_auto_likes:
-            bot.reply_to(message, f"📭 No auto likes found for user {tg_user_id}")
+            bot.reply_to(message, f"📭 𝐍𝐨 𝐚𝐮𝐭𝐨 𝐥𝐢𝐤𝐞𝐬 𝐟𝐨𝐮𝐧𝐝 𝐟𝐨𝐫 𝐮𝐬𝐞𝐫 {tg_user_id}")
             return
         
         today_bd = datetime.now(BANGLADESH_TZ).date()
         
         text = f"╭━━━━━━━━━━━━━━━✪\n"
-        text += f"│👤 AUTO LIKES FOR USER\n"
+        text += f"│👤 𝐀𝐔𝐓𝐎 𝐋𝐈𝐊𝐄𝐒 𝐅𝐎𝐑 𝐔𝐒𝐄𝐑\n"
         text += f"╰━━━━━━━━━━━━━━━✪\n\n"
-        text += f"🆔 User ID: {tg_user_id}\n\n"
+        text += f"🆔 𝐔𝐬𝐞𝐫 𝐈𝐃 : {tg_user_id}\n\n"
         
         for uid, data in user_auto_likes.items():
             expiry = data.get('expiry_date')
@@ -2133,45 +2114,45 @@ def user_auto_cmd(message):
             
             if days_left is not None:
                 if days_left < 0:
-                    status = "❌ EXPIRED"
+                    status = "❌ 𝐄𝐗𝐏𝐈𝐑𝐄𝐃"
                 elif days_left == 0:
-                    status = "⚠️ EXPIRES TODAY"
+                    status = "⚠️ 𝐄𝐗𝐏𝐈𝐑𝐄𝐒 𝐓𝐎𝐃𝐀𝐘"
                 elif days_left <= 3:
-                    status = f"⚠️ {days_left} DAYS LEFT"
+                    status = f"⚠️ {days_left} 𝐃𝐀𝐘𝐒 𝐋𝐄𝐅𝐓"
                 else:
-                    status = f"✅ {days_left} DAYS LEFT"
+                    status = f"✅ {days_left} 𝐃𝐀𝐘𝐒 𝐋𝐄𝐅𝐓"
             else:
-                status = "✅ ACTIVE"
+                status = "✅ 𝐀𝐂𝐓𝐈𝐕𝐄"
             
-            text += f"╭━⟮ 🆔 UID: {uid} ⟯\n"
-            text += f"│🌍 Region: {region}\n"
-            text += f"│📅 Added: {data.get('added_date', 'N/A')}\n"
-            text += f"│📆 Expires: {expiry}\n"
-            text += f"│📊 Status: {status}\n"
+            text += f"╭━⟮ 🆔 𝐔𝐈𝐃 : {uid} ⟯\n"
+            text += f"│🌍 𝐑𝐞𝐠𝐢𝐨𝐧 : {region}\n"
+            text += f"│📅 𝐀𝐝𝐝𝐞𝐝 : {data.get('added_date', 'N/A')}\n"
+            text += f"│📆 𝐄𝐱𝐩𝐢𝐫𝐞𝐬 : {expiry}\n"
+            text += f"│📊 𝐒𝐭𝐚𝐭𝐮𝐬 : {status}\n"
             text += "╰━━━━━━━━━━━━━━━✪\n\n"
         
         bot.reply_to(message, text)
         
     except ValueError:
-        bot.reply_to(message, "❌ Invalid User ID! Must be a number.")
+        bot.reply_to(message, "❌ 𝐈𝐧𝐯𝐚𝐥𝐢𝐝 𝐔𝐬𝐞𝐫 𝐈𝐃! 𝐌𝐮𝐬𝐭 𝐛𝐞 𝐚 𝐧𝐮𝐦𝐛𝐞𝐫.")
 
 @bot.message_handler(commands=['alt'])
 def auto_time_cmd(message):
     if not is_admin(message.from_user.id):
-        bot.reply_to(message, "❌ This command is only for bot owner and admins!")
+        bot.reply_to(message, "❌ 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐨𝐧𝐥𝐲 𝐟𝐨𝐫 𝐛𝐨𝐭 𝐨𝐰𝐧𝐞𝐫 𝐚𝐧𝐝 𝐚𝐝𝐦𝐢𝐧𝐬!")
         return
     
     if len(message.text.split()) < 2:
         bot.reply_to(
             message,
             "╭━━━━━━━━━━━━━━━✪\n"
-            "│⏰ AUTO TIME HELP\n"
+            "│⏰ 𝐀𝐔𝐓𝐎 𝐓𝐈𝐌𝐄 𝐇𝐄𝐋𝐏\n"
             "╰━━━━━━━━━━━━━━━✪\n\n"
-            "📌 /alt 4am   - Set to 4:00 AM\n"
-            "📌 /alt 6pm   - Set to 6:00 PM\n"
-            "📌 /alt 12am  - Set to 12:00 AM\n"
-            "📌 /alt 12pm  - Set to 12:00 PM\n"
-            "📌 /alt 8     - Set to 8:00 AM"
+            "📌 /alt 4am   - 𝐒𝐞𝐭 𝐭𝐨 4:00 𝐀𝐌\n"
+            "📌 /alt 6pm   - 𝐒𝐞𝐭 𝐭𝐨 6:00 𝐏𝐌\n"
+            "📌 /alt 12am  - 𝐒𝐞𝐭 𝐭𝐨 12:00 𝐀𝐌\n"
+            "📌 /alt 12pm  - 𝐒𝐞𝐭 𝐭𝐨 12:00 𝐏𝐌\n"
+            "📌 /alt 8     - 𝐒𝐞𝐭 𝐭𝐨 8:00 𝐀𝐌"
         )
         return
     
@@ -2215,7 +2196,7 @@ def auto_time_cmd(message):
             new_min = 0
         
         if new_hour < 0 or new_hour > 23:
-            bot.reply_to(message, "❌ Invalid hour! Use 0-23")
+            bot.reply_to(message, "❌ 𝐈𝐧𝐯𝐚𝐥𝐢𝐝 𝐡𝐨𝐮𝐫! 𝐔𝐬𝐞 0-23")
             return
         
         auto_time_data["hour"] = new_hour
@@ -2226,12 +2207,12 @@ def auto_time_cmd(message):
         bot.reply_to(message, text)
         
     except (ValueError, IndexError):
-        bot.reply_to(message, "❌ Invalid format! Use: /alt 4am, /alt 6pm, /alt 8")
+        bot.reply_to(message, "❌ 𝐈𝐧𝐯𝐚𝐥𝐢𝐝 𝐟𝐨𝐫𝐦𝐚𝐭! 𝐔𝐬𝐞 : /alt 4am, /alt 6pm, /alt 8")
 
 @bot.message_handler(commands=['scheduler'])
 def scheduler_check_cmd(message):
     if not is_admin(message.from_user.id):
-        bot.reply_to(message, "❌ This command is only for bot owner and admins!")
+        bot.reply_to(message, "❌ 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐨𝐧𝐥𝐲 𝐟𝐨𝐫 𝐛𝐨𝐭 𝐨𝐰𝐧𝐞𝐫 𝐚𝐧𝐝 𝐚𝐝𝐦𝐢𝐧𝐬!")
         return
     
     now_bd = datetime.now(BANGLADESH_TZ)
@@ -2261,18 +2242,18 @@ def scheduler_check_cmd(message):
     
     status_text = (
         "╭━━━━━━━━━━━━━━━✪\n"
-        "│🤖 SCHEDULER STATUS\n"
+        "│🤖 𝐒𝐂𝐇𝐄𝐃𝐔𝐋𝐄𝐑 𝐒𝐓𝐀𝐓𝐔𝐒\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        f"📅 Current Time: {now_bd.strftime('%Y-%m-%d %H:%M:%S')}\n"
-        f"🌏 Timezone: Bangladesh (UTC+6)\n"
-        f"⏰ Auto Time: {auto_hour:02d}:{auto_min:02d}\n"
-        f"⏳ Next Run: in {hours_until}h {minutes_until}m\n"
-        f"📊 Total UIDs: {len(AUTO_LIKE_UIDS)}\n"
-        f"👤 Auto Users: {len(AUTO_LIKE_USERS)}\n"
-        f"⚠️ Expiring Soon: {expiring_soon}\n"
-        f"🔄 Scheduler Thread: {'✅ Alive' if scheduler_alive else '❌ Dead'}\n"
-        f"📢 Channel: {CHANNEL_USERNAME}\n"
-        f"👥 Required Group: {REQUIRED_GROUP_USERNAME}\n"
+        f"📅 𝐂𝐮𝐫𝐫𝐞𝐧𝐭 𝐓𝐢𝐦𝐞 : {now_bd.strftime('%Y-%m-%d %H:%M:%S')}\n"
+        f"🌏 𝐓𝐢𝐦𝐞𝐳𝐨𝐧𝐞 : 𝐁𝐚𝐧𝐠𝐥𝐚𝐝𝐞𝐬𝐡 (𝐔𝐓𝐂+6)\n"
+        f"⏰ 𝐀𝐮𝐭𝐨 𝐓𝐢𝐦𝐞 : {auto_hour:02d}:{auto_min:02d}\n"
+        f"⏳ 𝐍𝐞𝐱𝐭 𝐑𝐮𝐧 : 𝐢𝐧 {hours_until}𝐡 {minutes_until}𝐦\n"
+        f"📊 𝐓𝐨𝐭𝐚𝐥 𝐔𝐈𝐃𝐬 : {len(AUTO_LIKE_UIDS)}\n"
+        f"👤 𝐀𝐮𝐭𝐨 𝐔𝐬𝐞𝐫𝐬 : {len(AUTO_LIKE_USERS)}\n"
+        f"⚠️ 𝐄𝐱𝐩𝐢𝐫𝐢𝐧𝐠 𝐒𝐨𝐨𝐧 : {expiring_soon}\n"
+        f"🔄 𝐒𝐜𝐡𝐞𝐝𝐮𝐥𝐞𝐫 𝐓𝐡𝐫𝐞𝐚𝐝 : {'✅ 𝐀𝐥𝐢𝐯𝐞' if scheduler_alive else '❌ 𝐃𝐞𝐚𝐝'}\n"
+        f"📢 𝐂𝐡𝐚𝐧𝐧𝐞𝐥 : {CHANNEL_USERNAME}\n"
+        f"👥 𝐑𝐞𝐪𝐮𝐢𝐫𝐞𝐝 𝐆𝐫𝐨𝐮𝐩 : {REQUIRED_GROUP_USERNAME}\n"
         "╰━━━━━━━━━━━━━━━✪"
     )
     
@@ -2281,11 +2262,11 @@ def scheduler_check_cmd(message):
 @bot.message_handler(commands=['on'])
 def turn_on_command(message):
     if not is_admin(message.from_user.id):
-        bot.reply_to(message, "❌ This command is only for bot owner and admins!")
+        bot.reply_to(message, "❌ 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐨𝐧𝐥𝐲 𝐟𝐨𝐫 𝐛𝐨𝐭 𝐨𝐰𝐧𝐞𝐫 𝐚𝐧𝐝 𝐚𝐝𝐦𝐢𝐧𝐬!")
         return
     
     if is_like_system_on():
-        bot.reply_to(message, "⚠️ Like system is already ON!")
+        bot.reply_to(message, "⚠️ 𝐋𝐢𝐤𝐞 𝐬𝐲𝐬𝐭𝐞𝐦 𝐢𝐬 𝐚𝐥𝐫𝐞𝐚𝐝𝐲 𝐎𝐍!")
         return
     
     set_like_system(True)
@@ -2295,11 +2276,11 @@ def turn_on_command(message):
 @bot.message_handler(commands=['off'])
 def turn_off_command(message):
     if not is_admin(message.from_user.id):
-        bot.reply_to(message, "❌ This command is only for bot owner and admins!")
+        bot.reply_to(message, "❌ 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐨𝐧𝐥𝐲 𝐟𝐨𝐫 𝐛𝐨𝐭 𝐨𝐰𝐧𝐞𝐫 𝐚𝐧𝐝 𝐚𝐝𝐦𝐢𝐧𝐬!")
         return
     
     if not is_like_system_on():
-        bot.reply_to(message, "⚠️ Like system is already OFF!")
+        bot.reply_to(message, "⚠️ 𝐋𝐢𝐤𝐞 𝐬𝐲𝐬𝐭𝐞𝐦 𝐢𝐬 𝐚𝐥𝐫𝐞𝐚𝐝𝐲 𝐎𝐅𝐅!")
         return
     
     set_like_system(False)
@@ -2311,28 +2292,28 @@ def turn_off_command(message):
 @bot.message_handler(commands=['addadmin'])
 def add_admin(message):
     if not is_owner(message.from_user.id):
-        bot.reply_to(message, "❌ This command is only for the bot owner!")
+        bot.reply_to(message, "❌ 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐨𝐧𝐥𝐲 𝐟𝐨𝐫 𝐭𝐡𝐞 𝐛𝐨𝐭 𝐨𝐰𝐧𝐞𝐫!")
         return
     
     try:
         uid = int(message.text.split()[1])
         if uid == OWNER_ID:
-            bot.reply_to(message, "❌ Owner cannot be added as admin!")
+            bot.reply_to(message, "❌ 𝐎𝐰𝐧𝐞𝐫 𝐜𝐚𝐧𝐧𝐨𝐭 𝐛𝐞 𝐚𝐝𝐝𝐞𝐝 𝐚𝐬 𝐚𝐝𝐦𝐢𝐧!")
             return
         if uid in ADMIN_USERS:
-            bot.reply_to(message, f"⚠️ User {uid} is already an admin!")
+            bot.reply_to(message, f"⚠️ 𝐔𝐬𝐞𝐫 {uid} 𝐢𝐬 𝐚𝐥𝐫𝐞𝐚𝐝𝐲 𝐚𝐧 𝐚𝐝𝐦𝐢𝐧!")
             return
         ADMIN_USERS.add(uid)
         save_json_data(ADMIN_FILE, list(ADMIN_USERS))
-        bot.reply_to(message, f"✅ User {uid} is now an ADMIN!")
+        bot.reply_to(message, f"✅ 𝐔𝐬𝐞𝐫 {uid} 𝐢𝐬 𝐧𝐨𝐰 𝐚𝐧 𝐀𝐃𝐌𝐈𝐍!")
         logger.info(f"Admin added: {uid} by owner {message.from_user.id}")
     except (IndexError, ValueError):
-        bot.reply_to(message, "❌ Usage: /addadmin user_id")
+        bot.reply_to(message, "❌ 𝐔𝐬𝐚𝐠𝐞 : /addadmin user_id")
 
 @bot.message_handler(commands=['removeadmin'])
 def remove_admin(message):
     if not is_owner(message.from_user.id):
-        bot.reply_to(message, "❌ This command is only for the bot owner!")
+        bot.reply_to(message, "❌ 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐨𝐧𝐥𝐲 𝐟𝐨𝐫 𝐭𝐡𝐞 𝐛𝐨𝐭 𝐨𝐰𝐧𝐞𝐫!")
         return
     
     try:
@@ -2340,21 +2321,21 @@ def remove_admin(message):
         if uid in ADMIN_USERS:
             ADMIN_USERS.discard(uid)
             save_json_data(ADMIN_FILE, list(ADMIN_USERS))
-            bot.reply_to(message, f"✅ Removed admin from user {uid}")
+            bot.reply_to(message, f"✅ 𝐑𝐞𝐦𝐨𝐯𝐞𝐝 𝐚𝐝𝐦𝐢𝐧 𝐟𝐫𝐨𝐦 𝐮𝐬𝐞𝐫 {uid}")
             logger.info(f"Admin removed: {uid} by owner {message.from_user.id}")
         else:
-            bot.reply_to(message, f"❌ User {uid} is not an admin")
+            bot.reply_to(message, f"❌ 𝐔𝐬𝐞𝐫 {uid} 𝐢𝐬 𝐧𝐨𝐭 𝐚𝐧 𝐚𝐝𝐦𝐢𝐧")
     except (IndexError, ValueError):
-        bot.reply_to(message, "❌ Usage: /removeadmin user_id")
+        bot.reply_to(message, "❌ 𝐔𝐬𝐚𝐠𝐞 : /removeadmin user_id")
 
 @bot.message_handler(commands=['admins'])
 def list_admins(message):
     if not is_owner(message.from_user.id):
-        bot.reply_to(message, "❌ This command is only for the bot owner!")
+        bot.reply_to(message, "❌ 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐨𝐧𝐥𝐲 𝐟𝐨𝐫 𝐭𝐡𝐞 𝐛𝐨𝐭 𝐨𝐰𝐧𝐞𝐫!")
         return
     
     if not ADMIN_USERS:
-        bot.reply_to(message, "📭 No admin users configured!")
+        bot.reply_to(message, "📭 𝐍𝐨 𝐚𝐝𝐦𝐢𝐧 𝐮𝐬𝐞𝐫𝐬 𝐜𝐨𝐧𝐟𝐢𝐠𝐮𝐫𝐞𝐝!")
         return
     
     admin_list = ""
@@ -2363,13 +2344,13 @@ def list_admins(message):
     
     text = (
         "╭━━━━━━━━━━━━━━━✪\n"
-        "│🛡️ ADMIN USERS LIST\n"
+        "│🛡️ 𝐀𝐃𝐌𝐈𝐍 𝐔𝐒𝐄𝐑𝐒 𝐋𝐈𝐒𝐓\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ 👑 ADMINS ✦ ⟯\n"
+        "╭━⟮ ✦ 👑 𝐀𝐃𝐌𝐈𝐍𝐒 ✦ ⟯\n"
         f"{admin_list}"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        f"📊 Total Admins: {len(ADMIN_USERS)}\n\n"
-        "✨ Owner only command ✨"
+        f"📊 𝐓𝐨𝐭𝐚𝐥 𝐀𝐝𝐦𝐢𝐧𝐬 : {len(ADMIN_USERS)}\n\n"
+        "✨ 𝐎𝐰𝐧𝐞𝐫 𝐨𝐧𝐥𝐲 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 ✨"
     )
     bot.reply_to(message, text)
 
@@ -2382,9 +2363,9 @@ def allow_group(message):
         gid = int(message.text.split()[1])
         ALLOWED_GROUP_IDS.add(gid)
         save_json_data(ALLOWED_GROUPS_FILE, list(ALLOWED_GROUP_IDS))
-        bot.reply_to(message, f"✅ Group {gid} allowed!")
+        bot.reply_to(message, f"✅ 𝐆𝐫𝐨𝐮𝐩 {gid} 𝐚𝐥𝐥𝐨𝐰𝐞𝐝!")
     except (IndexError, ValueError):
-        bot.reply_to(message, "❌ Usage: /allow group_id")
+        bot.reply_to(message, "❌ 𝐔𝐬𝐚𝐠𝐞 : /allow group_id")
 
 @bot.message_handler(commands=['addvip'])
 def add_vip(message):
@@ -2394,13 +2375,13 @@ def add_vip(message):
     try:
         uid = int(message.text.split()[1])
         if uid in VIP_USERS:
-            bot.reply_to(message, "⚠️ Already VIP!")
+            bot.reply_to(message, "⚠️ 𝐀𝐥𝐫𝐞𝐚𝐝𝐲 𝐕𝐈𝐏!")
             return
         VIP_USERS.add(uid)
         save_json_data(VIP_FILE, list(VIP_USERS))
-        bot.reply_to(message, f"✅ User {uid} is now VIP!")
+        bot.reply_to(message, f"✅ 𝐔𝐬𝐞𝐫 {uid} 𝐢𝐬 𝐧𝐨𝐰 𝐕𝐈𝐏!")
     except (IndexError, ValueError):
-        bot.reply_to(message, "❌ Usage: /addvip user_id")
+        bot.reply_to(message, "❌ 𝐔𝐬𝐚𝐠𝐞 : /addvip user_id")
 
 @bot.message_handler(commands=['removevip'])
 def remove_vip(message):
@@ -2412,11 +2393,11 @@ def remove_vip(message):
         if uid in VIP_USERS:
             VIP_USERS.discard(uid)
             save_json_data(VIP_FILE, list(VIP_USERS))
-            bot.reply_to(message, f"✅ Removed VIP from user {uid}")
+            bot.reply_to(message, f"✅ 𝐑𝐞𝐦𝐨𝐯𝐞𝐝 𝐕𝐈𝐏 𝐟𝐫𝐨𝐦 𝐮𝐬𝐞𝐫 {uid}")
         else:
-            bot.reply_to(message, f"❌ User {uid} is not VIP")
+            bot.reply_to(message, f"❌ 𝐔𝐬𝐞𝐫 {uid} 𝐢𝐬 𝐧𝐨𝐭 𝐕𝐈𝐏")
     except (IndexError, ValueError):
-        bot.reply_to(message, "❌ Usage: /removevip user_id")
+        bot.reply_to(message, "❌ 𝐔𝐬𝐚𝐠𝐞 : /removevip user_id")
 
 @bot.message_handler(commands=['limit'])
 def set_daily_limit(message):
@@ -2427,13 +2408,13 @@ def set_daily_limit(message):
     try:
         new_limit = int(message.text.split()[1])
         if new_limit < 0:
-            bot.reply_to(message, "❌ Limit cannot be negative!")
+            bot.reply_to(message, "❌ 𝐋𝐢𝐦𝐢𝐭 𝐜𝐚𝐧𝐧𝐨𝐭 𝐛𝐞 𝐧𝐞𝐠𝐚𝐭𝐢𝐯𝐞!")
             return
         old_limit = DAILY_LIMIT
         DAILY_LIMIT = new_limit
-        bot.reply_to(message, f"📊 User limit changed from {old_limit} to {DAILY_LIMIT}")
+        bot.reply_to(message, f"📊 𝐔𝐬𝐞𝐫 𝐥𝐢𝐦𝐢𝐭 𝐜𝐡𝐚𝐧𝐠𝐞𝐝 𝐟𝐫𝐨𝐦 {old_limit} 𝐭𝐨 {DAILY_LIMIT}")
     except (IndexError, ValueError):
-        bot.reply_to(message, "❌ Usage: /limit number")
+        bot.reply_to(message, "❌ 𝐔𝐬𝐚𝐠𝐞 : /limit number")
 
 @bot.message_handler(commands=['glimit'])
 def set_group_limit(message):
@@ -2444,13 +2425,13 @@ def set_group_limit(message):
     try:
         new_limit = int(message.text.split()[1])
         if new_limit < 0:
-            bot.reply_to(message, "❌ Limit cannot be negative!")
+            bot.reply_to(message, "❌ 𝐋𝐢𝐦𝐢𝐭 𝐜𝐚𝐧𝐧𝐨𝐭 𝐛𝐞 𝐧𝐞𝐠𝐚𝐭𝐢𝐯𝐞!")
             return
         old_limit = GROUP_DAILY_LIMIT
         GROUP_DAILY_LIMIT = new_limit
-        bot.reply_to(message, f"👥 Group limit changed from {old_limit} to {GROUP_DAILY_LIMIT}")
+        bot.reply_to(message, f"👥 𝐆𝐫𝐨𝐮𝐩 𝐥𝐢𝐦𝐢𝐭 𝐜𝐡𝐚𝐧𝐠𝐞𝐝 𝐟𝐫𝐨𝐦 {old_limit} 𝐭𝐨 {GROUP_DAILY_LIMIT}")
     except (IndexError, ValueError):
-        bot.reply_to(message, "❌ Usage: /glimit number")
+        bot.reply_to(message, "❌ 𝐔𝐬𝐚𝐠𝐞 : /glimit number")
 
 @bot.message_handler(commands=['limits'])
 def show_all_limits(message):
@@ -2459,7 +2440,7 @@ def show_all_limits(message):
     
     auto_hour = auto_time_data.get("hour", AUTO_LIKE_HOUR)
     auto_min = auto_time_data.get("minute", AUTO_LIKE_MINUTE)
-    time_suffix = "AM" if auto_hour < 12 else "PM"
+    time_suffix = "𝐀𝐌" if auto_hour < 12 else "𝐏𝐌"
     display_hour = auto_hour if auto_hour <= 12 else auto_hour - 12
     if display_hour == 0:
         display_hour = 12
@@ -2476,7 +2457,7 @@ def show_all_limits(message):
     total_group_likes = sum(data["used"] for data in GROUP_LIMIT_TRACKER.values() 
                            if isinstance(data, dict) and data.get("date") == today_bd)
     
-    system_status_text = "🟢 ON" if is_like_system_on() else "🔴 OFF"
+    system_status_text = "🟢 𝐎𝐍" if is_like_system_on() else "🔴 𝐎𝐅𝐅"
     
     expiring_soon = 0
     for user_data in AUTO_LIKE_USERS.values():
@@ -2487,26 +2468,26 @@ def show_all_limits(message):
     
     text = (
         "╭━━━━━━━━━━━━━━━✪\n"
-        "│📊 CURRENT LIMITS\n"
+        "│📊 𝐂𝐔𝐑𝐑𝐄𝐍𝐓 𝐋𝐈𝐌𝐈𝐓𝐒\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ ⚙️ LIMITS ✦ ⟯\n"
-        f"│👤 User: {DAILY_LIMIT}\n"
-        f"│👥 Group: {GROUP_DAILY_LIMIT}\n"
-        f"│⏰ Auto: {time_str} (BDT)\n"
-        f"│🔘 System: {system_status_text}\n"
+        "╭━⟮ ✦ ⚙️ 𝐋𝐈𝐌𝐈𝐓𝐒 ✦ ⟯\n"
+        f"│👤 𝐔𝐬𝐞𝐫 : {DAILY_LIMIT}\n"
+        f"│👥 𝐆𝐫𝐨𝐮𝐩 : {GROUP_DAILY_LIMIT}\n"
+        f"│⏰ 𝐀𝐮𝐭𝐨 : {time_str} (𝐁𝐃𝐓)\n"
+        f"│🔘 𝐒𝐲𝐬𝐭𝐞𝐦 : {system_status_text}\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ 📈 TODAY'S STATS ✦ ⟯\n"
-        f"│👤 Active Users: {total_users_today}\n"
-        f"│❤️ Total Likes: {total_likes_today}\n"
-        f"│👥 Active Groups: {total_groups_today}\n"
-        f"│👥 Group Likes: {total_group_likes}\n"
+        "╭━⟮ ✦ 📈 𝐓𝐎𝐃𝐀𝐘'𝐒 𝐒𝐓𝐀𝐓𝐒 ✦ ⟯\n"
+        f"│👤 𝐀𝐜𝐭𝐢𝐯𝐞 𝐔𝐬𝐞𝐫𝐬 : {total_users_today}\n"
+        f"│❤️ 𝐓𝐨𝐭𝐚𝐥 𝐋𝐢𝐤𝐞𝐬 : {total_likes_today}\n"
+        f"│👥 𝐀𝐜𝐭𝐢𝐯𝐞 𝐆𝐫𝐨𝐮𝐩𝐬 : {total_groups_today}\n"
+        f"│👥 𝐆𝐫𝐨𝐮𝐩 𝐋𝐢𝐤𝐞𝐬 : {total_group_likes}\n"
         "╰━━━━━━━━━━━━━━━✪\n\n"
-        "╭━⟮ ✦ 🌟 OTHERS ✦ ⟯\n"
-        f"│🌟 VIP: {len(VIP_USERS)}\n"
-        f"│🛡️ Admins: {len(ADMIN_USERS)}\n"
-        f"│⚡ Auto UIDs: {len(AUTO_LIKE_UIDS)}\n"
-        f"│👤 Auto Users: {len(AUTO_LIKE_USERS)}\n"
-        f"│⚠️ Expiring Soon: {expiring_soon}\n"
+        "╭━⟮ ✦ 🌟 𝐎𝐓𝐇𝐄𝐑𝐒 ✦ ⟯\n"
+        f"│🌟 𝐕𝐈𝐏 : {len(VIP_USERS)}\n"
+        f"│🛡️ 𝐀𝐝𝐦𝐢𝐧𝐬 : {len(ADMIN_USERS)}\n"
+        f"│⚡ 𝐀𝐮𝐭𝐨 𝐔𝐈𝐃𝐬 : {len(AUTO_LIKE_UIDS)}\n"
+        f"│👤 𝐀𝐮𝐭𝐨 𝐔𝐬𝐞𝐫𝐬 : {len(AUTO_LIKE_USERS)}\n"
+        f"│⚠️ 𝐄𝐱𝐩𝐢𝐫𝐢𝐧𝐠 𝐒𝐨𝐨𝐧 : {expiring_soon}\n"
         "╰━━━━━━━━━━━━━━━✪"
     )
     bot.reply_to(message, text)
@@ -2521,19 +2502,19 @@ def test_api_cmd(message):
         uid = args[1] if len(args) > 1 else "2004537688"
         region = args[2].upper() if len(args) > 2 else "BD"
         
-        testing = bot.reply_to(message, "🔍 Testing API connection...")
+        testing = bot.reply_to(message, "🔍 𝐓𝐞𝐬𝐭𝐢𝐧𝐠 𝐀𝐏𝐈 𝐜𝐨𝐧𝐧𝐞𝐜𝐭𝐢𝐨𝐧...")
         result = call_api(uid, region)
         
         if result.get("status") == 0:
-            text = f"❌ API TEST FAILED\nError: {result.get('error', 'Unknown')}"
+            text = f"❌ 𝐀𝐏𝐈 𝐓𝐄𝐒𝐓 𝐅𝐀𝐈𝐋𝐄𝐃\n𝐄𝐫𝐫𝐨𝐫 : {result.get('error', 'Unknown')}"
         else:
             name = result.get('PlayerNickname', 'N/A')
             likes = result.get('LikesGivenByAPI', 'N/A')
-            text = f"✅ API TEST SUCCESS\n🌍 Region: {region}\n👤 Name: {name}\n🆔 UID: {uid}\n❤️ Likes: {likes}"
+            text = f"✅ 𝐀𝐏𝐈 𝐓𝐄𝐒𝐓 𝐒𝐔𝐂𝐂𝐄𝐒𝐒\n🌍 𝐑𝐞𝐠𝐢𝐨𝐧 : {region}\n👤 𝐍𝐚𝐦𝐞 : {name}\n🆔 𝐔𝐈𝐃 : {uid}\n❤️ 𝐋𝐢𝐤𝐞𝐬 : {likes}"
         
         bot.edit_message_text(text, testing.chat.id, testing.message_id)
     except Exception as e:
-        bot.reply_to(message, f"❌ Test error: {e}")
+        bot.reply_to(message, f"❌ 𝐓𝐞𝐬𝐭 𝐞𝐫𝐫𝐨𝐫 : {e}")
 
 # ================= BROADCAST COMMANDS =================
 
@@ -2543,7 +2524,7 @@ def broadcast_cmd(message):
         return
     
     if len(message.text.split()) < 2:
-        bot.reply_to(message, "❌ Usage: /broadcast Your message here")
+        bot.reply_to(message, "❌ 𝐔𝐬𝐚𝐠𝐞 : /broadcast 𝐘𝐨𝐮𝐫 𝐦𝐞𝐬𝐬𝐚𝐠𝐞 𝐡𝐞𝐫𝐞")
         return
     
     broadcast_text = message.text.split(' ', 1)[1]
@@ -2559,9 +2540,9 @@ def broadcast_cmd(message):
     
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        InlineKeyboardButton("✅ CONFIRM", callback_data=f"broadcast_confirm_{broadcast_id}"),
-        InlineKeyboardButton("❌ CANCEL", callback_data=f"broadcast_cancel_{broadcast_id}"),
-        InlineKeyboardButton("👁️ PREVIEW", callback_data=f"broadcast_preview_{broadcast_id}")
+        InlineKeyboardButton("✅ 𝐂𝐎𝐍𝐅𝐈𝐑𝐌", callback_data=f"broadcast_confirm_{broadcast_id}"),
+        InlineKeyboardButton("❌ 𝐂𝐀𝐍𝐂𝐄𝐋", callback_data=f"broadcast_cancel_{broadcast_id}"),
+        InlineKeyboardButton("👁️ 𝐏𝐑𝐄𝐕𝐈𝐄𝐖", callback_data=f"broadcast_preview_{broadcast_id}")
     )
     
     unique_users = set()
@@ -2579,7 +2560,7 @@ def broadcast_cmd(message):
             pass
     unique_users.add(OWNER_ID)
     
-    bot.reply_to(message, f"📢 Broadcast ready!\n\nMessage: {broadcast_text[:100]}\n\n👥 Total users: {len(unique_users)}\n\nClick CONFIRM to send", reply_markup=keyboard)
+    bot.reply_to(message, f"📢 𝐁𝐫𝐨𝐚𝐝𝐜𝐚𝐬𝐭 𝐫𝐞𝐚𝐝𝐲!\n\n𝐌𝐞𝐬𝐬𝐚𝐠𝐞 : {broadcast_text[:100]}\n\n👥 𝐓𝐨𝐭𝐚𝐥 𝐮𝐬𝐞𝐫𝐬 : {len(unique_users)}\n\n𝐂𝐥𝐢𝐜𝐤 𝐂𝐎𝐍𝐅𝐈𝐑𝐌 𝐭𝐨 𝐬𝐞𝐧𝐝", reply_markup=keyboard)
 
 @bot.message_handler(commands=['broadcast_preview'])
 def broadcast_preview_cmd(message):
@@ -2587,11 +2568,11 @@ def broadcast_preview_cmd(message):
         return
     
     if len(message.text.split()) < 2:
-        bot.reply_to(message, "❌ Usage: /broadcast_preview Your message")
+        bot.reply_to(message, "❌ 𝐔𝐬𝐚𝐠𝐞 : /broadcast_preview 𝐘𝐨𝐮𝐫 𝐦𝐞𝐬𝐬𝐚𝐠𝐞")
         return
     
     broadcast_text = message.text.split(' ', 1)[1]
-    bot.reply_to(message, f"👁️ PREVIEW:\n\n{broadcast_text}")
+    bot.reply_to(message, f"👁️ 𝐏𝐑𝐄𝐕𝐈𝐄𝐖 :\n\n{broadcast_text}")
 
 @bot.message_handler(commands=['broadcast_stats'])
 def broadcast_stats_cmd(message):
@@ -2603,7 +2584,7 @@ def broadcast_stats_cmd(message):
     sent = sum(1 for m in broadcast_data["messages"] if m.get("status") == "sent")
     failed = sum(1 for m in broadcast_data["messages"] if m.get("status") == "failed")
     
-    text = f"📊 BROADCAST STATS\n\nTotal: {total_msgs}\nPending: {pending}\nSent: {sent}\nFailed: {failed}"
+    text = f"📊 𝐁𝐑𝐎𝐀𝐃𝐂𝐀𝐒𝐓 𝐒𝐓𝐀𝐓𝐒\n\n𝐓𝐨𝐭𝐚𝐥 : {total_msgs}\n𝐏𝐞𝐧𝐝𝐢𝐧𝐠 : {pending}\n𝐒𝐞𝐧𝐭 : {sent}\n𝐅𝐚𝐢𝐥𝐞𝐝 : {failed}"
     bot.reply_to(message, text)
 
 @bot.message_handler(commands=['broadcast_cancel'])
@@ -2617,7 +2598,7 @@ def broadcast_cancel_cmd(message):
             msg["status"] = "cancelled"
             cancelled += 1
     save_json_data(BROADCAST_FILE, broadcast_data)
-    bot.reply_to(message, f"✅ Cancelled {cancelled} pending broadcasts")
+    bot.reply_to(message, f"✅ 𝐂𝐚𝐧𝐜𝐞𝐥𝐥𝐞𝐝 {cancelled} 𝐩𝐞𝐧𝐝𝐢𝐧𝐠 𝐛𝐫𝐨𝐚𝐝𝐜𝐚𝐬𝐭𝐬")
 
 def send_broadcast(broadcast_id):
     broadcast = None
@@ -2647,7 +2628,7 @@ def send_broadcast(broadcast_id):
     broadcast["status"] = "sending"
     save_json_data(BROADCAST_FILE, broadcast_data)
     
-    bot.send_message(OWNER_ID, f"📢 Broadcast started! Total: {len(unique_users)}")
+    bot.send_message(OWNER_ID, f"📢 𝐁𝐫𝐨𝐚𝐝𝐜𝐚𝐬𝐭 𝐬𝐭𝐚𝐫𝐭𝐞𝐝! 𝐓𝐨𝐭𝐚𝐥 : {len(unique_users)}")
     
     sent_count = 0
     failed_count = 0
@@ -2655,7 +2636,7 @@ def send_broadcast(broadcast_id):
     for user_id in unique_users:
         try:
             now_bd = datetime.now(BANGLADESH_TZ)
-            formatted_msg = f"📢 BROADCAST MESSAGE\n\n{broadcast['text']}\n\n📅 {now_bd.strftime('%d-%m-%Y')} ⏰ {now_bd.strftime('%I:%M %p')} (BDT)"
+            formatted_msg = f"📢 𝐁𝐑𝐎𝐀𝐃𝐂𝐀𝐒𝐓 𝐌𝐄𝐒𝐒𝐀𝐆𝐄\n\n{broadcast['text']}\n\n📅 {now_bd.strftime('%d-%m-%Y')} ⏰ {now_bd.strftime('%I:%M %p')} (𝐁𝐃𝐓)"
             bot.send_message(user_id, formatted_msg)
             sent_count += 1
             
@@ -2671,19 +2652,19 @@ def send_broadcast(broadcast_id):
     broadcast["status"] = "completed"
     save_json_data(BROADCAST_FILE, broadcast_data)
     
-    bot.send_message(OWNER_ID, f"✅ Broadcast completed!\nSent: {sent_count}\nFailed: {failed_count}\nSuccess: {(sent_count/len(unique_users)*100):.1f}%")
+    bot.send_message(OWNER_ID, f"✅ 𝐁𝐫𝐨𝐚𝐝𝐜𝐚𝐬𝐭 𝐜𝐨𝐦𝐩𝐥𝐞𝐭𝐞𝐝!\n𝐒𝐞𝐧𝐭 : {sent_count}\n𝐅𝐚𝐢𝐥𝐞𝐝 : {failed_count}\n𝐒𝐮𝐜𝐜𝐞𝐬𝐬 : {(sent_count/len(unique_users)*100):.1f}%")
 
 def handle_broadcast_callback(call):
     if call.from_user.id != OWNER_ID:
-        bot.answer_callback_query(call.id, "❌ Only owner can confirm!")
+        bot.answer_callback_query(call.id, "❌ 𝐎𝐧𝐥𝐲 𝐨𝐰𝐧𝐞𝐫 𝐜𝐚𝐧 𝐜𝐨𝐧𝐟𝐢𝐫𝐦!")
         return
     
     action = call.data.split('_')[1]
     broadcast_id = int(call.data.split('_')[2])
     
     if action == "confirm":
-        bot.answer_callback_query(call.id, "✅ Broadcast started!")
-        bot.edit_message_text("📢 BROADCAST SENDING...\n\nSending message to all users...\nThis may take a few minutes.", call.message.chat.id, call.message.message_id)
+        bot.answer_callback_query(call.id, "✅ 𝐁𝐫𝐨𝐚𝐝𝐜𝐚𝐬𝐭 𝐬𝐭𝐚𝐫𝐭𝐞𝐝!")
+        bot.edit_message_text("📢 𝐁𝐑𝐎𝐀𝐃𝐂𝐀𝐒𝐓 𝐒𝐄𝐍𝐃𝐈𝐍𝐆...\n\n𝐒𝐞𝐧𝐝𝐢𝐧𝐠 𝐦𝐞𝐬𝐬𝐚𝐠𝐞 𝐭𝐨 𝐚𝐥𝐥 𝐮𝐬𝐞𝐫𝐬...\n𝐓𝐡𝐢𝐬 𝐦𝐚𝐲 𝐭𝐚𝐤𝐞 𝐚 𝐟𝐞𝐰 𝐦𝐢𝐧𝐮𝐭𝐞𝐬.", call.message.chat.id, call.message.message_id)
         broadcast_thread = threading.Thread(target=send_broadcast, args=(broadcast_id,), daemon=True)
         broadcast_thread.start()
     elif action == "cancel":
@@ -2692,13 +2673,13 @@ def handle_broadcast_callback(call):
                 msg["status"] = "cancelled"
                 break
         save_json_data(BROADCAST_FILE, broadcast_data)
-        bot.answer_callback_query(call.id, "❌ Broadcast cancelled!")
-        bot.edit_message_text("❌ BROADCAST CANCELLED", call.message.chat.id, call.message.message_id)
+        bot.answer_callback_query(call.id, "❌ 𝐁𝐫𝐨𝐚𝐝𝐜𝐚𝐬𝐭 𝐜𝐚𝐧𝐜𝐞𝐥𝐥𝐞𝐝!")
+        bot.edit_message_text("❌ 𝐁𝐑𝐎𝐀𝐃𝐂𝐀𝐒𝐓 𝐂𝐀𝐍𝐂𝐄𝐋𝐋𝐄𝐃", call.message.chat.id, call.message.message_id)
     elif action == "preview":
         for msg in broadcast_data["messages"]:
             if msg["id"] == broadcast_id:
-                bot.answer_callback_query(call.id, "👁️ Preview")
-                bot.send_message(call.from_user.id, f"👁️ PREVIEW:\n\n{msg['text']}")
+                bot.answer_callback_query(call.id, "👁️ 𝐏𝐫𝐞𝐯𝐢𝐞𝐰")
+                bot.send_message(call.from_user.id, f"👁️ 𝐏𝐑𝐄𝐕𝐈𝐄𝐖 :\n\n{msg['text']}")
                 break
 
 # ================= PERIODIC SAVER =================
@@ -2712,14 +2693,14 @@ def periodic_saver():
 # ================= MAIN =================
 if __name__ == "__main__":
     print("╔════════════════════════════╗")
-    print("║   🤖 BOT STARTING...       ║")
+    print("║   🤖 𝐁𝐎𝐓 𝐒𝐓𝐀𝐑𝐓𝐈𝐍𝐆...   ║")
     print("╚════════════════════════════╝")
     
     cleanup_expired_auto_likes()
     
     auto_hour = auto_time_data.get("hour", AUTO_LIKE_HOUR)
     auto_min = auto_time_data.get("minute", AUTO_LIKE_MINUTE)
-    time_suffix = "AM" if auto_hour < 12 else "PM"
+    time_suffix = "𝐀𝐌" if auto_hour < 12 else "𝐏𝐌"
     display_hour = auto_hour if auto_hour <= 12 else auto_hour - 12
     if display_hour == 0:
         display_hour = 12
@@ -2727,21 +2708,21 @@ if __name__ == "__main__":
     
     now_bd = datetime.now(BANGLADESH_TZ)
     
-    print(f"📊 Owner ID: {OWNER_ID}")
-    print(f"📊 User Daily Limit: {DAILY_LIMIT}")
-    print(f"📊 Group Daily Limit: {GROUP_DAILY_LIMIT}")
-    print(f"📊 VIP Users: {len(VIP_USERS)}")
-    print(f"📊 Admin Users: {len(ADMIN_USERS)}")
-    print(f"📊 Auto Like UIDs: {len(AUTO_LIKE_UIDS)}")
-    print(f"📊 Auto Like Users: {len(AUTO_LIKE_USERS)}")
-    print(f"📊 Allowed Groups: {len(ALLOWED_GROUP_IDS)}")
-    print(f"⏰ Auto Task Time: {time_str} Daily (BDT)")
-    print(f"🕒 Current Time: {now_bd.strftime('%I:%M %p')} (BDT)")
-    print(f"🌏 Timezone: Bangladesh Time (UTC+6)")
-    print(f"📢 Channel: {CHANNEL_USERNAME}")
-    print(f"👥 Required Group: {REQUIRED_GROUP_USERNAME}")
-    print(f"🔘 System Status: {'ON' if is_like_system_on() else 'OFF'}")
-    print("📋 Task Groups:")
+    print(f"📊 𝐎𝐰𝐧𝐞𝐫 𝐈𝐃 : {OWNER_ID}")
+    print(f"📊 𝐔𝐬𝐞𝐫 𝐃𝐚𝐢𝐥𝐲 𝐋𝐢𝐦𝐢𝐭 : {DAILY_LIMIT}")
+    print(f"📊 𝐆𝐫𝐨𝐮𝐩 𝐃𝐚𝐢𝐥𝐲 𝐋𝐢𝐦𝐢𝐭 : {GROUP_DAILY_LIMIT}")
+    print(f"📊 𝐕𝐈𝐏 𝐔𝐬𝐞𝐫𝐬 : {len(VIP_USERS)}")
+    print(f"📊 𝐀𝐝𝐦𝐢𝐧 𝐔𝐬𝐞𝐫𝐬 : {len(ADMIN_USERS)}")
+    print(f"📊 𝐀𝐮𝐭𝐨 𝐋𝐢𝐤𝐞 𝐔𝐈𝐃𝐬 : {len(AUTO_LIKE_UIDS)}")
+    print(f"📊 𝐀𝐮𝐭𝐨 𝐋𝐢𝐤𝐞 𝐔𝐬𝐞𝐫𝐬 : {len(AUTO_LIKE_USERS)}")
+    print(f"📊 𝐀𝐥𝐥𝐨𝐰𝐞𝐝 𝐆𝐫𝐨𝐮𝐩𝐬 : {len(ALLOWED_GROUP_IDS)}")
+    print(f"⏰ 𝐀𝐮𝐭𝐨 𝐓𝐚𝐬𝐤 𝐓𝐢𝐦𝐞 : {time_str} 𝐃𝐚𝐢𝐥𝐲 (𝐁𝐃𝐓)")
+    print(f"🕒 𝐂𝐮𝐫𝐫𝐞𝐧𝐭 𝐓𝐢𝐦𝐞 : {now_bd.strftime('%I:%M %p')} (𝐁𝐃𝐓)")
+    print(f"🌏 𝐓𝐢𝐦𝐞𝐳𝐨𝐧𝐞 : 𝐁𝐚𝐧𝐠𝐥𝐚𝐝𝐞𝐬𝐡 𝐓𝐢𝐦𝐞 (𝐔𝐓𝐂+6)")
+    print(f"📢 𝐂𝐡𝐚𝐧𝐧𝐞𝐥 : {CHANNEL_USERNAME}")
+    print(f"👥 𝐑𝐞𝐪𝐮𝐢𝐫𝐞𝐝 𝐆𝐫𝐨𝐮𝐩 : {REQUIRED_GROUP_USERNAME}")
+    print(f"🔘 𝐒𝐲𝐬𝐭𝐞𝐦 𝐒𝐭𝐚𝐭𝐮𝐬 : {'𝐎𝐍' if is_like_system_on() else '𝐎𝐅𝐅'}")
+    print("📋 𝐓𝐚𝐬𝐤 𝐆𝐫𝐨𝐮𝐩𝐬 :")
     for i, group_id in enumerate(TASK_GROUPS, 1):
         print(f"   {i}. {group_id}")
     print("=" * 50)
@@ -2750,13 +2731,13 @@ if __name__ == "__main__":
     scheduler_thread = threading.Thread(target=auto_scheduler, name="AutoScheduler", daemon=True)
     scheduler_thread.start()
     logger.info("✅ Auto scheduler started")
-    print("✅ Auto scheduler started")
+    print("✅ 𝐀𝐮𝐭𝐨 𝐬𝐜𝐡𝐞𝐝𝐮𝐥𝐞𝐫 𝐬𝐭𝐚𝐫𝐭𝐞𝐝")
     
     # Start periodic saver
     saver_thread = threading.Thread(target=periodic_saver, name="DataSaver", daemon=True)
     saver_thread.start()
     logger.info("✅ Periodic saver started")
-    print("✅ Periodic saver started")
+    print("✅ 𝐏𝐞𝐫𝐢𝐨𝐝𝐢𝐜 𝐬𝐚𝐯𝐞𝐫 𝐬𝐭𝐚𝐫𝐭𝐞𝐝")
     
     # Startup message to all task groups
     for group_id in TASK_GROUPS:
@@ -2764,28 +2745,28 @@ if __name__ == "__main__":
             bot.send_message(
                 group_id,
                 f"╭━━━━━━━━━━━━━━━✪\n"
-                f"│🤖 BOT STARTED\n"
+                f"│🤖 𝐁𝐎𝐓 𝐒𝐓𝐀𝐑𝐓𝐄𝐃\n"
                 f"╰━━━━━━━━━━━━━━━✪\n\n"
-                f"⏰ Auto Time: {time_str} BDT\n"
-                f"📊 Total UIDs: {len(AUTO_LIKE_UIDS)}\n"
-                f"👤 Auto Users: {len(AUTO_LIKE_USERS)}\n"
-                f"🔘 System: {'ON' if is_like_system_on() else 'OFF'}\n"
-                f"🕒 Current: {now_bd.strftime('%I:%M %p')}\n"
-                f"🌏 Timezone: Bangladesh (UTC+6)"
+                f"⏰ 𝐀𝐮𝐭𝐨 𝐓𝐢𝐦𝐞 : {time_str} 𝐁𝐃𝐓\n"
+                f"📊 𝐓𝐨𝐭𝐚𝐥 𝐔𝐈𝐃𝐬 : {len(AUTO_LIKE_UIDS)}\n"
+                f"👤 𝐀𝐮𝐭𝐨 𝐔𝐬𝐞𝐫𝐬 : {len(AUTO_LIKE_USERS)}\n"
+                f"🔘 𝐒𝐲𝐬𝐭𝐞𝐦 : {'𝐎𝐍' if is_like_system_on() else '𝐎𝐅𝐅'}\n"
+                f"🕒 𝐂𝐮𝐫𝐫𝐞𝐧𝐭 : {now_bd.strftime('%I:%M %p')}\n"
+                f"🌏 𝐓𝐢𝐦𝐞𝐳𝐨𝐧𝐞 : 𝐁𝐚𝐧𝐠𝐥𝐚𝐝𝐞𝐬𝐡 (𝐔𝐓𝐂+6)"
             )
         except:
             pass
     
-    print("\n🚀 Bot is running! Press Ctrl+C to stop.\n")
+    print("\n🚀 𝐁𝐨𝐭 𝐢𝐬 𝐫𝐮𝐧𝐧𝐢𝐧𝐠! 𝐏𝐫𝐞𝐬𝐬 𝐂𝐭𝐫𝐥+𝐂 𝐭𝐨 𝐬𝐭𝐨𝐩.\n")
     
     try:
         bot.infinity_polling()
     except KeyboardInterrupt:
-        print("\n👋 Bot stopped by user")
+        print("\n👋 𝐁𝐨𝐭 𝐬𝐭𝐨𝐩𝐩𝐞𝐝 𝐛𝐲 𝐮𝐬𝐞𝐫")
         logger.info("Bot stopped by user")
         save_all_data()
     except Exception as e:
-        print(f"❌ Bot crashed: {e}")
+        print(f"❌ 𝐁𝐨𝐭 𝐜𝐫𝐚𝐬𝐡𝐞𝐝 : {e}")
         logger.error(f"Bot crashed: {e}")
         save_all_data()
         time.sleep(5)
