@@ -12,19 +12,18 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 # ==========================================
 # ⚙️ SECURE BOT CONFIGURATION
 # ==========================================
-TOKEN = '8926868360:AAGb9kvjfxrdbritVWvYTC7m751xxU6Hg0c' # Replace with your Token
+TOKEN = '8926868360:AAGb9kvjfxrdbritVWvYTC7m751lKU6Hg0c' # Replace with your Token
 
-# 🌐 100 LIKES API CONFIG
-API_100_URL = 'https://riyad-like-api-ob-52.vercel.app'
-API_100_KEY = 'RIYADAH' 
+# 🌐 20 LIKES API CONFIG (Sends 20 likes)
+API_20_URL = 'https://riyad-like-api-ob-52.vercel.app'
+API_20_KEY = 'RIYADAH' 
 
-# 🌐 220 LIKES API CONFIG
-# 👇 Replace these with your actual 220 Likes API link and Key
-API_220_URL = 'https://xxxx.vercel.app' 
-API_220_KEY = 'xxxx'
+# 🌐 30 LIKES API CONFIG (Sends 30 likes)
+API_30_URL = 'https://xxxx.vercel.app'  # Replace with your actual API URL
+API_30_KEY = 'xxxx'  # Replace with your actual API key
 
 # 👑 Admin Settings
-ADMIN_IDS = [7603719412, 7603719412] # Add your Admin Telegram IDs here (Integers)
+ADMIN_IDS = [7603719412]  # Add your Admin Telegram IDs here (Integers)
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -32,7 +31,7 @@ ALLOWED_REGIONS = ['ME', 'ID', 'TH', 'VN', 'SG', 'BD', 'PK', 'MY', 'PH', 'RU', '
 REMAIN_FILE = 'remain_syreo.json'
 GROUPS_FILE = 'group_ids.json'
 VIP_FILE = 'vip.json'
-AUTO_DB_FILE = 'auto_likes.json' # DB for auto tasks
+AUTO_DB_FILE = 'auto_likes.json'
 
 # Global State Variables
 bot_is_on = True
@@ -66,14 +65,24 @@ def save_json(filepath, data):
     except Exception as e:
         print(f"Error saving {filepath}: {e}")
 
-def load_vip(): return load_json(VIP_FILE, {})
-def save_vip(data): save_json(VIP_FILE, data)
-def load_groups(): return load_json(GROUPS_FILE, {})
-def save_groups(data): save_json(GROUPS_FILE, data)
+def load_vip(): 
+    return load_json(VIP_FILE, {})
+
+def save_vip(data): 
+    save_json(VIP_FILE, data)
+
+def load_groups(): 
+    return load_json(GROUPS_FILE, {})
+
+def save_groups(data): 
+    save_json(GROUPS_FILE, data)
+
 def load_auto_db(): 
     default = {"time": "08:57 AM", "last_run": "", "tasks": {}, "next_serial": 1}
     return load_json(AUTO_DB_FILE, default)
-def save_auto_db(data): save_json(AUTO_DB_FILE, data)
+
+def save_auto_db(data): 
+    save_json(AUTO_DB_FILE, data)
 
 def load_remain():
     data = load_json(REMAIN_FILE, {})
@@ -118,7 +127,7 @@ def get_missing_chats(user_id):
 # ==========================================
 # 🎨 UI TEMPLATES
 # ==========================================
-def report_ui(data, region, status, response_time, remain_requests):
+def report_ui(data, region, status, response_time, remain_requests, likes_sent):
     nickname = html.escape(str(data.get('PlayerNickname', 'Unknown')))
     uid = data.get('UID', 'Unknown')
     added = data.get('LikesGivenByAPI', 0)
@@ -131,6 +140,7 @@ def report_ui(data, region, status, response_time, remain_requests):
 ━━━━━━━━━━━━━━━━━━━━━━━
 <i>⚡ Speed: {response_time}s</i>
 <i>⏱️ API Time: {api_time}s</i>
+<b>💎 Likes Sent:</b> <code>{likes_sent}</code>
 
 <b>👤 Account:</b> <code>{nickname}</code>
 <b>🆔 UID:</b> <code>{uid}</code>
@@ -188,18 +198,18 @@ def info_ui(title, message):
     return f"╭━〔 ℹ️ **{title}** 〕━⬣\n┃ 💠 {message}\n╰━━━━━━━━━━━━━━━━━━⬣"
 
 # ==========================================
-# 🤖 BOT COMMANDS (STANDARD)
+# 🤖 BOT COMMANDS (UPDATED)
 # ==========================================
-@bot.message_handler(commands=['on', 'off', 'resetremain', 'y5', 'y6'])
+@bot.message_handler(commands=['p0', 'p02', 'resetremain', 'y5', 'y6'])
 def handle_admin_commands(message):
     global bot_is_on, bot_remain, user_usage
     if not is_admin(message.from_user.id): return 
     command = message.text.split()[0].lower()
     
-    if command in ['/on', '/y5']:
+    if command in ['/p0', '/y5']:
         bot_is_on = True
         bot.reply_to(message, info_ui("SYSTEM ALIVE", "Bot has been turned **ON**."), parse_mode="Markdown")
-    elif command in ['/off', '/y6']:
+    elif command in ['/p02', '/y6']:
         bot_is_on = False
         bot.reply_to(message, info_ui("SYSTEM SLEEP", "Bot has been turned **OFF**."), parse_mode="Markdown")
     elif command == '/resetremain':
@@ -208,7 +218,7 @@ def handle_admin_commands(message):
         user_usage.clear()
         bot.reply_to(message, info_ui("SYSTEM RESET", "Global limits reset."), parse_mode="Markdown")
 
-def tempon_worker(chat_id, seconds):
+def freeon_worker(chat_id, seconds):
     global bot_is_on
     bot_is_on = True
     for i in range(1, seconds + 1):
@@ -218,12 +228,12 @@ def tempon_worker(chat_id, seconds):
     bot_is_on = False
     bot.send_message(chat_id, "🛑 **bot is off now**", parse_mode="Markdown")
 
-@bot.message_handler(commands=['tempon'])
-def handle_tempon(message):
+@bot.message_handler(commands=['freeon'])
+def handle_freeon(message):
     if not is_admin(message.from_user.id): return
     args = message.text.split()
     if len(args) != 2:
-        bot.reply_to(message, "⚠️ **Usage:** `/tempon <seconds>`", parse_mode="Markdown")
+        bot.reply_to(message, "⚠️ **Usage:** `/freeon <seconds>`", parse_mode="Markdown")
         return
     try:
         seconds = int(args[1])
@@ -231,12 +241,11 @@ def handle_tempon(message):
     except:
         return bot.reply_to(message, "❌ Seconds must be a number.")
     bot.reply_to(message, f"✅ Bot is temporarily ON for {seconds} seconds.")
-    threading.Thread(target=tempon_worker, args=(message.chat.id, seconds)).start()
+    threading.Thread(target=freeon_worker, args=(message.chat.id, seconds)).start()
 
 # --- VIP & GROUP COMMANDS ---
-@bot.message_handler(commands=['addvip', 'removevip', 'viplist', 'allow', 'disallow', 'remains'])
+@bot.message_handler(commands=['vipadd', 'removevip', 'viplist', 'allow', 'disallow', 'remains'])
 def handle_vip_group_commands(message):
-    # (Kept all your existing functionality here to keep code concise but working perfectly)
     cmd = message.text.split()[0].lower()
     user_id = message.from_user.id
     
@@ -252,7 +261,7 @@ def handle_vip_group_commands(message):
     if not is_admin(user_id): return
     args = message.text.split()
 
-    if cmd == '/addvip' and len(args) == 3:
+    if cmd == '/vipadd' and len(args) == 3:
         vips = load_vip()
         vips[args[1]] = {"name": f"User ID: {args[1]}", "limit": int(args[2])}
         save_vip(vips)
@@ -283,7 +292,7 @@ def handle_vip_group_commands(message):
         if str(message.chat.id) in groups: del groups[str(message.chat.id)]; save_groups(groups); bot.reply_to(message, "🚫 Group Disallowed.")
 
 # ==========================================
-# 🚀 AUTO-TASK COMMANDS (NEW & UPDATED)
+# 🚀 AUTO-TASK COMMANDS
 # ==========================================
 @bot.message_handler(commands=['settime'])
 def handle_settime(message):
@@ -299,12 +308,12 @@ def handle_settime(message):
     save_auto_db(db)
     bot.reply_to(message, f"✅ Auto-task time set to **{time_str}** (BD TimeZone).", parse_mode="Markdown")
 
-@bot.message_handler(commands=['autolike'])
-def handle_autolike(message):
+@bot.message_handler(commands=['likeauto'])
+def handle_likeauto(message):
     if not is_admin(message.from_user.id): return
     args = message.text.split()
     if len(args) != 5:
-        bot.reply_to(message, "⚠️ **Usage:** `/autolike {region} {uid} {100/220} {days}`\nExample: `/autolike BD 123456 100 7`", parse_mode="Markdown")
+        bot.reply_to(message, "⚠️ **Usage:** `/likeauto {region} {uid} {20/30} {days}`\nExample: `/likeauto BD 123456 20 7`", parse_mode="Markdown")
         return
 
     region, uid, package_str, days_str = args[1].upper(), args[2], args[3], args[4]
@@ -312,8 +321,8 @@ def handle_autolike(message):
     if region not in ALLOWED_REGIONS:
         bot.reply_to(message, error_ui("INVALID REGION", f"Allowed: `{', '.join(ALLOWED_REGIONS)}`"), parse_mode="Markdown")
         return
-    if package_str not in ['100', '220']:
-        bot.reply_to(message, error_ui("INVALID PACKAGE", "Package must be 100 or 220."), parse_mode="Markdown")
+    if package_str not in ['20', '30']:
+        bot.reply_to(message, error_ui("INVALID PACKAGE", "Package must be 20 or 30."), parse_mode="Markdown")
         return
 
     try:
@@ -336,7 +345,7 @@ def handle_autolike(message):
         "sent": 0,
         "remain": total_likes,
         "days": days,
-        "nickname": "Waiting for run..." # Will update on first successful run
+        "nickname": "Waiting for run..."
     }
     save_auto_db(db)
     
@@ -348,15 +357,15 @@ def handle_autolist(message):
     db = load_auto_db()
     tasks = db.get('tasks', {})
     
-    count_100 = sum(1 for t in tasks.values() if t['package'] == 100)
-    count_220 = sum(1 for t in tasks.values() if t['package'] == 220)
+    count_20 = sum(1 for t in tasks.values() if t['package'] == 20)
+    count_30 = sum(1 for t in tasks.values() if t['package'] == 30)
     
     header = f"""<blockquote><b>📊 MEMBERSHIP DATABASE 📊</b></blockquote>
 <blockquote><b>📈 SYSTEM OVERVIEW:</b>
 ├─ 👥 TOTAL ACTIVE : {len(tasks)}
 ├─ ⏳ TOTAL QUEUED : 0
-├─ 💙 100 LIKES : {str(count_100).zfill(2)}
-└─ ❤️‍🔥 220 LIKES : {str(count_220).zfill(2)}</blockquote>
+├─ 💙 20 LIKES : {str(count_20).zfill(2)}
+└─ ❤️‍🔥 30 LIKES : {str(count_30).zfill(2)}</blockquote>
 <blockquote><b>⏰ AUTO TASK TIME : {db.get('time', 'Not Set')} (BD)</b></blockquote>\n"""
 
     msg_body = header
@@ -388,8 +397,12 @@ def execute_auto_tasks():
         chat_id = task['chat_id']
         
         # 🔄 DYNAMIC API SELECTION BASED ON PACKAGE
-        base_api = API_100_URL if package == 100 else API_220_URL
-        api_key = API_100_KEY if package == 100 else API_220_KEY
+        if package == 20:
+            base_api = API_20_URL
+            api_key = API_20_KEY
+        else:  # package == 30
+            base_api = API_30_URL
+            api_key = API_30_KEY
         
         url = f"{base_api}/like?uid={uid}&server_name={region.lower()}&key={api_key}"
         
@@ -408,7 +421,7 @@ def execute_auto_tasks():
             if status in [1, 2]:
                 task['sent'] += added
                 task['remain'] -= added
-                task['nickname'] = nickname # Update name for /autolist
+                task['nickname'] = nickname
                 
                 msg_text = auto_report_ui(True, package, response_time, nickname, uid, region, before, added, after, serial)
                 bot.send_message(chat_id, msg_text, parse_mode="HTML")
@@ -420,14 +433,12 @@ def execute_auto_tasks():
             print(f"[AUTO TASK ERROR] {uid}: {e}")
             bot.send_message(chat_id, f"⚠️ Auto Task Failed for Task No: {serial} (Timeout/Error).")
 
-        # If target reached, remove task
         if task['remain'] <= 0:
             bot.send_message(chat_id, f"✅ <b>Task {serial} Completed!</b> Target likes reached. Removed from DB.", parse_mode="HTML")
             del db['tasks'][serial]
         
-        # Save after every task call
         save_auto_db(db)
-        time.sleep(5) # Wait 5 seconds before calling the next account
+        time.sleep(5)
 
 def cron_worker():
     print("⏳ Auto-Task Cron Started (Checking BD Timezone)...")
@@ -453,10 +464,10 @@ def cron_worker():
         except Exception as e:
             print(f"Cron Worker Error: {e}")
             
-        time.sleep(30) 
+        time.sleep(30)
 
 # ==========================================
-# 🚀 STANDARD LIKE COMMAND 
+# 🚀 STANDARD LIKE COMMAND (Uses 20 likes API)
 # ==========================================
 @bot.message_handler(commands=['like'])
 def handle_like(message):
@@ -528,12 +539,17 @@ def verify_join_callback(call):
 
 def process_like_request(message, region, uid, user_id, user_name):
     global bot_remain, user_usage
+    
+    # Manual /like command uses 20 likes API
+    likes_sent = 20
+    base_api = API_20_URL
+    api_key = API_20_KEY
+    
     wait_msg = bot.reply_to(message, "𝑷𝒓𝒐𝒄𝒆𝒔𝒔𝒊𝒏𝒈 𝒍𝒊𝒌𝒆𝒔 𝑺𝒆𝒏𝒅𝒊𝒏𝒈.....🚀")
 
     try:
         start_time = time.time() 
-        # Note: Default manual command uses the 100 Likes API configuration
-        url = f"{API_100_URL}/like?uid={uid}&server_name={region.lower()}&key={API_100_KEY}"
+        url = f"{base_api}/like?uid={uid}&server_name={region.lower()}&key={api_key}"
         
         response = requests.get(url, timeout=15) 
         data = response.json()
@@ -550,7 +566,7 @@ def process_like_request(message, region, uid, user_id, user_name):
                     save_remain(bot_remain)
             
             remain_requests = "♾️" if is_admin(user_id) else (vips[str(user_id)]['limit'] - user_usage.get(user_id, 0) if str(user_id) in vips else USER_LIMIT - user_usage.get(user_id, 0))
-            final_text = report_ui(data, region, status, response_time, remain_requests)
+            final_text = report_ui(data, region, status, response_time, remain_requests, likes_sent)
             bot.edit_message_text(chat_id=message.chat.id, message_id=wait_msg.message_id, text=final_text, parse_mode="HTML")
 
         elif status == 0:
@@ -563,6 +579,13 @@ def process_like_request(message, region, uid, user_id, user_name):
 
 if __name__ == "__main__":
     print("🚀 Premium Bot is starting securely...")
+    print("📌 Updated Features:")
+    print("   - /p0 (Turn ON) | /p02 (Turn OFF)")
+    print("   - /freeon (Temporary ON)")
+    print("   - /vipadd (Add VIP)")
+    print("   - /likeauto (Auto Like Command)")
+    print("   - 20 Likes API | 30 Likes API")
+    
     # Start Cron Worker in background
     threading.Thread(target=cron_worker, daemon=True).start()
     
