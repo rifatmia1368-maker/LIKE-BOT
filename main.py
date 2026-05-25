@@ -40,10 +40,16 @@ user_usage = {}
 pending_requests = {}
 
 # ==========================================
-# 🛡️ ADMIN CHECKER
+# 🛡️ ADMIN CHECKER & FULL CONTROL
 # ==========================================
 def is_admin(user_id):
     return user_id in ADMIN_IDS
+
+# Admin full control function
+def admin_full_control(user_id):
+    if is_admin(user_id):
+        return True
+    return False
 
 # ==========================================
 # 📂 FILE MANAGERS
@@ -203,7 +209,7 @@ def info_ui(title, message):
 @bot.message_handler(commands=['p0', 'p02', 'resetremain', 'y5', 'y6'])
 def handle_admin_commands(message):
     global bot_is_on, bot_remain, user_usage
-    if not is_admin(message.from_user.id): return 
+    if not admin_full_control(message.from_user.id): return 
     command = message.text.split()[0].lower()
     
     if command in ['/p0', '/y5']:
@@ -230,7 +236,7 @@ def freeon_worker(chat_id, seconds):
 
 @bot.message_handler(commands=['freeon'])
 def handle_freeon(message):
-    if not is_admin(message.from_user.id): return
+    if not admin_full_control(message.from_user.id): return
     args = message.text.split()
     if len(args) != 2:
         bot.reply_to(message, "⚠️ **Usage:** `/freeon <seconds>`", parse_mode="Markdown")
@@ -258,7 +264,7 @@ def handle_vip_group_commands(message):
         text = f"╭━〔 🌐 **𝗦𝗬𝗦𝗧𝗘𝗠 𝗥𝗘𝗠𝗔𝗜𝗡𝗦** 〕━⬣\n┃ 🤖 **𝗚𝗹𝗼𝗯𝗮𝗹 𝗕𝗼𝘁:** `{bot_remain}/15`\n┃ 👤 **𝗬𝗼𝘂𝗿 𝗟𝗶𝗺𝗶𝘁:** `{uses_left}`\n╰━━━━━━━━━━━━━━━━━━⬣"
         return bot.reply_to(message, text, parse_mode="Markdown")
 
-    if not is_admin(user_id): return
+    if not admin_full_control(user_id): return
     args = message.text.split()
 
     if cmd == '/vipadd' and len(args) == 3:
@@ -292,14 +298,14 @@ def handle_vip_group_commands(message):
         if str(message.chat.id) in groups: del groups[str(message.chat.id)]; save_groups(groups); bot.reply_to(message, "🚫 Group Disallowed.")
 
 # ==========================================
-# 🚀 AUTO-TASK COMMANDS
+# 🚀 AUTO-TASK COMMANDS (UPDATED)
 # ==========================================
-@bot.message_handler(commands=['settime'])
-def handle_settime(message):
-    if not is_admin(message.from_user.id): return
+@bot.message_handler(commands=['autotime'])  # Changed from /settime to /autotime
+def handle_autotime(message):
+    if not admin_full_control(message.from_user.id): return
     args = message.text.split(maxsplit=1)
     if len(args) != 2:
-        bot.reply_to(message, "⚠️ **Usage:** `/settime HH:MM AM/PM`\nExample: `/settime 04:30 AM`", parse_mode="Markdown")
+        bot.reply_to(message, "⚠️ **Usage:** `/autotime HH:MM AM/PM`\nExample: `/autotime 04:30 AM`", parse_mode="Markdown")
         return
     
     time_str = args[1].upper()
@@ -310,7 +316,7 @@ def handle_settime(message):
 
 @bot.message_handler(commands=['likeauto'])
 def handle_likeauto(message):
-    if not is_admin(message.from_user.id): return
+    if not admin_full_control(message.from_user.id): return
     args = message.text.split()
     if len(args) != 5:
         bot.reply_to(message, "⚠️ **Usage:** `/likeauto {region} {uid} {20/30} {days}`\nExample: `/likeauto BD 123456 20 7`", parse_mode="Markdown")
@@ -351,9 +357,39 @@ def handle_likeauto(message):
     
     bot.reply_to(message, f"✅ **Auto Task Added!**\n🎓 Task No: `{serial_num}`\n🆔 UID: `{uid}`\n💳 Package: `{package}` for `{days}` days", parse_mode="Markdown")
 
+@bot.message_handler(commands=['autoremove'])  # New command to remove by UID
+def handle_autoremove(message):
+    if not admin_full_control(message.from_user.id): return
+    args = message.text.split()
+    if len(args) != 2:
+        bot.reply_to(message, "⚠️ **Usage:** `/autoremove {uid}`\nExample: `/autoremove 1234567890`", parse_mode="Markdown")
+        return
+    
+    uid_to_remove = args[1]
+    db = load_auto_db()
+    tasks = db.get('tasks', {})
+    
+    found = False
+    removed_tasks = []
+    
+    for serial, task in list(tasks.items()):
+        if task['uid'] == uid_to_remove:
+            removed_tasks.append((serial, task))
+            del db['tasks'][serial]
+            found = True
+    
+    if found:
+        save_auto_db(db)
+        msg = f"✅ **Removed {len(removed_tasks)} task(s) with UID:** `{uid_to_remove}`\n"
+        for serial, task in removed_tasks:
+            msg += f"└─ 🎓 Task No: `{serial}` | Package: `{task['package']}`\n"
+        bot.reply_to(message, msg, parse_mode="Markdown")
+    else:
+        bot.reply_to(message, f"❌ No auto task found with UID: `{uid_to_remove}`", parse_mode="Markdown")
+
 @bot.message_handler(commands=['autolist'])
 def handle_autolist(message):
-    if not is_admin(message.from_user.id): return
+    if not admin_full_control(message.from_user.id): return
     db = load_auto_db()
     tasks = db.get('tasks', {})
     
@@ -374,7 +410,8 @@ def handle_autolist(message):
         user_block = f"""<blockquote>👤 {nickname}
 ├─ 🆔 <code>{data['uid']}</code> | 🇧🇩 {data['region']}
 ├─ ➡️ PACKAGE TYPE : {data['package']} LIKES
-└─ 📊 SENT: {data['sent']} | REMAIN: {data['remain']} ⚡</blockquote>\n"""
+├─ 📊 SENT: {data['sent']} | REMAIN: {data['remain']} ⚡
+└─ 🎓 TASK NO: {serial}</blockquote>\n"""
         msg_body += user_block
 
     if not tasks:
@@ -579,12 +616,16 @@ def process_like_request(message, region, uid, user_id, user_name):
 
 if __name__ == "__main__":
     print("🚀 Premium Bot is starting securely...")
+    print("📌 Admin ID: 7603719412 (Full Control)")
     print("📌 Updated Features:")
     print("   - /p0 (Turn ON) | /p02 (Turn OFF)")
     print("   - /freeon (Temporary ON)")
     print("   - /vipadd (Add VIP)")
     print("   - /likeauto (Auto Like Command)")
+    print("   - /autotime (Set Auto Task Time)")
+    print("   - /autoremove {uid} (Remove Auto Task by UID)")
     print("   - 20 Likes API | 30 Likes API")
+    print("   - Admin Full Control Enabled")
     
     # Start Cron Worker in background
     threading.Thread(target=cron_worker, daemon=True).start()
