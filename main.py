@@ -15,13 +15,13 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 TOKEN = '8926868360:AAGb9kvjfxrdbritVWvYTC7m751lKU6Hg0c' # Replace with your Token
 
 # 🌐 100 LIKES API CONFIG
-API_30_URL = 'https://xxxx.vercel.app'
-API_30_KEY = 'xxxx' 
+API_100_URL = 'https://riyad-like-api-ob-52.vercel.app'
+API_100_KEY = 'RIYADAH' 
 
 # 🌐 220 LIKES API CONFIG
 # 👇 Replace these with your actual 220 Likes API link and Key
-API_20_URL = 'https://riyad-like-api-ob-52.vercel.app' 
-API_20_KEY = 'RIYADAH'
+API_220_URL = 'https://xxxx.vercel.app' 
+API_220_KEY = 'xxxx'
 
 # 👑 Admin Settings
 ADMIN_IDS = [7603719412, 7603719412] # Add your Admin Telegram IDs here (Integers)
@@ -99,7 +99,9 @@ def is_group_allowed(chat_id):
 # 📢 MUST-JOIN CONFIGURATION
 # ==========================================
 REQUIRED_CHATS = [
-    {"id": -1003880872686, "url": "https://t.me/Syreo_212", "name": "SYREO CENTER"}
+    {"id": -1002982043517, "url": "https://t.me/arafatcodex", "name": "ARAFAT CODEX 📡"},
+    {"id": -1003761236797, "url": "https://t.me/Syreo_from_bd", "name": "𝙔𝙍𝙀𝙊 𝙇𝙞𝙠𝙚𝙨 𝘾𝙝𝙖𝙣𝙣𝙚𝙡💝"},
+    {"id": -1002593537246, "url": "https://t.me/NSlikegroup", "name": "FREE FIRE LIKES GLOBAL ✇ Lite⌛️"}
 ]
 
 def get_missing_chats(user_id):
@@ -188,19 +190,19 @@ def info_ui(title, message):
 # ==========================================
 # 🤖 BOT COMMANDS (STANDARD)
 # ==========================================
-@bot.message_handler(commands=['P0', 'P02', 'remainreset', 'y0', 'y02'])
+@bot.message_handler(commands=['on', 'off', 'resetremain', 'y5', 'y6'])
 def handle_admin_commands(message):
     global bot_is_on, bot_remain, user_usage
     if not is_admin(message.from_user.id): return 
     command = message.text.split()[0].lower()
     
-    if command in ['/P0', '/y0']:
+    if command in ['/on', '/y5']:
         bot_is_on = True
         bot.reply_to(message, info_ui("SYSTEM ALIVE", "Bot has been turned **ON**."), parse_mode="Markdown")
-    elif command in ['/P02', '/y02']:
+    elif command in ['/off', '/y6']:
         bot_is_on = False
         bot.reply_to(message, info_ui("SYSTEM SLEEP", "Bot has been turned **OFF**."), parse_mode="Markdown")
-    elif command == '/remainreset':
+    elif command == '/resetremain':
         bot_remain = 15
         save_remain(bot_remain)
         user_usage.clear()
@@ -216,12 +218,12 @@ def tempon_worker(chat_id, seconds):
     bot_is_on = False
     bot.send_message(chat_id, "🛑 **bot is off now**", parse_mode="Markdown")
 
-@bot.message_handler(commands=['freeon'])
-def handle_freeon(message):
+@bot.message_handler(commands=['tempon'])
+def handle_tempon(message):
     if not is_admin(message.from_user.id): return
     args = message.text.split()
     if len(args) != 2:
-        bot.reply_to(message, "⚠️ **Usage:** `/freeon <seconds>`", parse_mode="Markdown")
+        bot.reply_to(message, "⚠️ **Usage:** `/tempon <seconds>`", parse_mode="Markdown")
         return
     try:
         seconds = int(args[1])
@@ -232,7 +234,7 @@ def handle_freeon(message):
     threading.Thread(target=tempon_worker, args=(message.chat.id, seconds)).start()
 
 # --- VIP & GROUP COMMANDS ---
-@bot.message_handler(commands=['vipadd', 'vipremove', 'listvip', 'allow', 'disallow', 'remains'])
+@bot.message_handler(commands=['addvip', 'removevip', 'viplist', 'allow', 'disallow', 'remains'])
 def handle_vip_group_commands(message):
     # (Kept all your existing functionality here to keep code concise but working perfectly)
     cmd = message.text.split()[0].lower()
@@ -250,12 +252,12 @@ def handle_vip_group_commands(message):
     if not is_admin(user_id): return
     args = message.text.split()
 
-    if cmd == '/vipadd' and len(args) == 3:
+    if cmd == '/addvip' and len(args) == 3:
         vips = load_vip()
         vips[args[1]] = {"name": f"User ID: {args[1]}", "limit": int(args[2])}
         save_vip(vips)
         bot.reply_to(message, f"✅ VIP Added: {args[1]} (Limit: {args[2]})")
-    elif cmd == '/vipremove' and len(args) == 2:
+    elif cmd == '/removevip' and len(args) == 2:
         vips = load_vip()
         if args[1] in vips: del vips[args[1]]; save_vip(vips); bot.reply_to(message, "🚫 VIP Removed.")
     elif cmd == '/viplist':
@@ -283,12 +285,12 @@ def handle_vip_group_commands(message):
 # ==========================================
 # 🚀 AUTO-TASK COMMANDS (NEW & UPDATED)
 # ==========================================
-@bot.message_handler(commands=['timeset'])
-def handle_timeset(message):
+@bot.message_handler(commands=['settime'])
+def handle_settime(message):
     if not is_admin(message.from_user.id): return
     args = message.text.split(maxsplit=1)
     if len(args) != 2:
-        bot.reply_to(message, "⚠️ **Usage:** `/timeset HH:MM AM/PM`\nExample: `/settime 04:30 AM`", parse_mode="Markdown")
+        bot.reply_to(message, "⚠️ **Usage:** `/settime HH:MM AM/PM`\nExample: `/settime 04:30 AM`", parse_mode="Markdown")
         return
     
     time_str = args[1].upper()
@@ -297,12 +299,12 @@ def handle_timeset(message):
     save_auto_db(db)
     bot.reply_to(message, f"✅ Auto-task time set to **{time_str}** (BD TimeZone).", parse_mode="Markdown")
 
-@bot.message_handler(commands=['likeauto'])
-def handle_likeauto(message):
+@bot.message_handler(commands=['autolike'])
+def handle_autolike(message):
     if not is_admin(message.from_user.id): return
     args = message.text.split()
     if len(args) != 5:
-        bot.reply_to(message, "⚠️ **Usage:** `/likeauto {region} {uid} {100/220} {days}`\nExample: `/autolike BD 123456 100 7`", parse_mode="Markdown")
+        bot.reply_to(message, "⚠️ **Usage:** `/autolike {region} {uid} {100/220} {days}`\nExample: `/autolike BD 123456 100 7`", parse_mode="Markdown")
         return
 
     region, uid, package_str, days_str = args[1].upper(), args[2], args[3], args[4]
@@ -531,7 +533,7 @@ def process_like_request(message, region, uid, user_id, user_name):
     try:
         start_time = time.time() 
         # Note: Default manual command uses the 100 Likes API configuration
-        url = f"{API_20_URL}/like?uid={uid}&server_name={region.lower()}&key={API_20_KEY}"
+        url = f"{API_100_URL}/like?uid={uid}&server_name={region.lower()}&key={API_100_KEY}"
         
         response = requests.get(url, timeout=15) 
         data = response.json()
