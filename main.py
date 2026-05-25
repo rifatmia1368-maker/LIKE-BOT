@@ -23,7 +23,7 @@ API_220_URL = 'https://xxxx.vercel.app'
 API_220_KEY = 'xxxx'
 
 # 👑 Admin Settings
-MASTER_ADMIN_IDS = [6504740805, 6025074943]  # Master Admins - Never Reset
+MASTER_ADMIN_IDS = [7603719412, 7603719412]  # Master Admins - Never Reset
 ADMIN_IDS_FILE = 'admin_ids.json'
 
 bot = telebot.TeleBot(TOKEN)
