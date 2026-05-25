@@ -23,7 +23,28 @@ API_30_URL = 'https://xxxx.vercel.app'  # Replace with your actual API URL
 API_30_KEY = 'xxxx'  # Replace with your actual API key
 
 # 👑 Admin Settings
-ADMIN_IDS = [7603719412]  # Add your Admin Telegram IDs here (Integers)
+ADMIN_IDS_FILE = 'admin_ids.json'
+DEFAULT_ADMINS = [7603719412]  # Default admin IDs (Integers)
+
+# Load admin IDs from file
+def load_admin_ids():
+    if os.path.exists(ADMIN_IDS_FILE):
+        try:
+            with open(ADMIN_IDS_FILE, 'r') as f:
+                data = json.load(f)
+                return data.get('admin_ids', DEFAULT_ADMINS.copy())
+        except Exception:
+            return DEFAULT_ADMINS.copy()
+    return DEFAULT_ADMINS.copy()
+
+def save_admin_ids(admin_ids):
+    try:
+        with open(ADMIN_IDS_FILE, 'w') as f:
+            json.dump({'admin_ids': admin_ids}, f, indent=4)
+    except Exception as e:
+        print(f"Error saving admin IDs: {e}")
+
+ADMIN_IDS = load_admin_ids()
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -45,11 +66,8 @@ pending_requests = {}
 def is_admin(user_id):
     return user_id in ADMIN_IDS
 
-# Admin full control function
 def admin_full_control(user_id):
-    if is_admin(user_id):
-        return True
-    return False
+    return is_admin(user_id)
 
 # ==========================================
 # 📂 FILE MANAGERS
@@ -204,6 +222,91 @@ def info_ui(title, message):
     return f"╭━〔 ℹ️ **{title}** 〕━⬣\n┃ 💠 {message}\n╰━━━━━━━━━━━━━━━━━━⬣"
 
 # ==========================================
+# 🤖 ADMIN MANAGEMENT COMMAND
+# ==========================================
+@bot.message_handler(commands=['admin'])
+def handle_admin_command(message):
+    if not is_admin(message.from_user.id):
+        bot.reply_to(message, "❌ You are not authorized to use this command!", parse_mode="Markdown")
+        return
+    
+    args = message.text.split()
+    
+    # /admin add <user_id> - Add new admin
+    if len(args) == 3 and args[1].lower() == 'add':
+        try:
+            new_admin_id = int(args[2])
+            if new_admin_id in ADMIN_IDS:
+                bot.reply_to(message, f"❌ User `{new_admin_id}` is already an admin!", parse_mode="Markdown")
+                return
+            
+            ADMIN_IDS.append(new_admin_id)
+            save_admin_ids(ADMIN_IDS)
+            bot.reply_to(message, f"✅ **New Admin Added!**\n👑 User ID: `{new_admin_id}`\n📌 This user now has full control over the bot.", parse_mode="Markdown")
+            
+            # Notify the new admin
+            try:
+                bot.send_message(new_admin_id, "🎉 **Congratulations!** You have been granted Admin access to the bot.\nYou now have full control over all bot functions.", parse_mode="Markdown")
+            except:
+                pass
+                
+        except ValueError:
+            bot.reply_to(message, "❌ Invalid User ID! Please provide a valid numeric ID.", parse_mode="Markdown")
+    
+    # /admin remove <user_id> - Remove admin
+    elif len(args) == 3 and args[1].lower() == 'remove':
+        try:
+            remove_admin_id = int(args[2])
+            if remove_admin_id not in ADMIN_IDS:
+                bot.reply_to(message, f"❌ User `{remove_admin_id}` is not an admin!", parse_mode="Markdown")
+                return
+            
+            if remove_admin_id == 7603719412:
+                bot.reply_to(message, "❌ Cannot remove the master admin (7603719412)!", parse_mode="Markdown")
+                return
+            
+            ADMIN_IDS.remove(remove_admin_id)
+            save_admin_ids(ADMIN_IDS)
+            bot.reply_to(message, f"✅ **Admin Removed!**\n👑 User ID: `{remove_admin_id}`\n📌 This user no longer has admin access.", parse_mode="Markdown")
+            
+            # Notify the removed admin
+            try:
+                bot.send_message(remove_admin_id, "⚠️ **Admin Access Revoked!**\nYou are no longer an admin of this bot.", parse_mode="Markdown")
+            except:
+                pass
+                
+        except ValueError:
+            bot.reply_to(message, "❌ Invalid User ID! Please provide a valid numeric ID.", parse_mode="Markdown")
+    
+    # /admin list - List all admins
+    elif len(args) == 2 and args[1].lower() == 'list':
+        admin_list = ""
+        for idx, admin_id in enumerate(ADMIN_IDS, 1):
+            master_tag = " 👑 MASTER" if admin_id == 7603719412 else ""
+            try:
+                user_info = bot.get_chat(admin_id)
+                name = user_info.first_name or user_info.username or str(admin_id)
+                admin_list += f"{idx}. `{admin_id}` - {name}{master_tag}\n"
+            except:
+                admin_list += f"{idx}. `{admin_id}`{master_tag}\n"
+        
+        text = f"""╭━〔 👑 **ADMIN LIST** 〕━⬣
+├─ 📊 Total Admins: `{len(ADMIN_IDS)}`
+{admin_list}
+╰━━━━━━━━━━━━━━━━━━⬣"""
+        bot.reply_to(message, text, parse_mode="Markdown")
+    
+    else:
+        bot.reply_to(message, """⚠️ **Admin Command Usage:**
+
+`/admin add <user_id>` - Add new admin
+`/admin remove <user_id>` - Remove admin
+`/admin list` - List all admins
+
+📌 **Note:** Only existing admins can use these commands.
+👑 Master Admin (7603719412) cannot be removed.""", parse_mode="Markdown")
+
+# ==========================================
 # 🤖 BOT COMMANDS (UPDATED)
 # ==========================================
 @bot.message_handler(commands=['p0', 'p02', 'resetremain', 'y5', 'y6'])
@@ -300,7 +403,7 @@ def handle_vip_group_commands(message):
 # ==========================================
 # 🚀 AUTO-TASK COMMANDS (UPDATED)
 # ==========================================
-@bot.message_handler(commands=['autotime'])  # Changed from /settime to /autotime
+@bot.message_handler(commands=['autotime'])
 def handle_autotime(message):
     if not admin_full_control(message.from_user.id): return
     args = message.text.split(maxsplit=1)
@@ -357,7 +460,7 @@ def handle_likeauto(message):
     
     bot.reply_to(message, f"✅ **Auto Task Added!**\n🎓 Task No: `{serial_num}`\n🆔 UID: `{uid}`\n💳 Package: `{package}` for `{days}` days", parse_mode="Markdown")
 
-@bot.message_handler(commands=['autoremove'])  # New command to remove by UID
+@bot.message_handler(commands=['autoremove'])
 def handle_autoremove(message):
     if not admin_full_control(message.from_user.id): return
     args = message.text.split()
@@ -616,8 +719,13 @@ def process_like_request(message, region, uid, user_id, user_name):
 
 if __name__ == "__main__":
     print("🚀 Premium Bot is starting securely...")
-    print("📌 Admin ID: 7603719412 (Full Control)")
-    print("📌 Updated Features:")
+    print(f"📌 Master Admin: 7603719412")
+    print(f"📌 Total Admins: {len(ADMIN_IDS)}")
+    print("📌 Admin Commands:")
+    print("   - /admin add <user_id> - Add new admin")
+    print("   - /admin remove <user_id> - Remove admin")
+    print("   - /admin list - List all admins")
+    print("📌 Other Commands:")
     print("   - /p0 (Turn ON) | /p02 (Turn OFF)")
     print("   - /freeon (Temporary ON)")
     print("   - /vipadd (Add VIP)")
@@ -625,7 +733,6 @@ if __name__ == "__main__":
     print("   - /autotime (Set Auto Task Time)")
     print("   - /autoremove {uid} (Remove Auto Task by UID)")
     print("   - 20 Likes API | 30 Likes API")
-    print("   - Admin Full Control Enabled")
     
     # Start Cron Worker in background
     threading.Thread(target=cron_worker, daemon=True).start()
