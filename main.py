@@ -132,9 +132,7 @@ def is_group_allowed(chat_id):
 # 📢 MUST-JOIN CONFIGURATION
 # ==========================================
 REQUIRED_CHATS = [
-    {"id": -1002982043517, "url": "https://t.me/arafatcodex", "name": "ARAFAT CODEX 📡"},
-    {"id": -1003761236797, "url": "https://t.me/Syreo_from_bd", "name": "𝙔𝙍𝙀𝙊 𝙇𝙞𝙠𝙚𝙨 𝘾𝙝𝙖𝙣𝙣𝙚𝙡💝"},
-    {"id": -1002593537246, "url": "https://t.me/NSlikegroup", "name": "FREE FIRE LIKES GLOBAL ✇ Lite⌛️"}
+    {"id": -1003880872686, "url": "https://t.me/Syreo_212", "name": "SYREO CENTER"},
 ]
 
 def get_missing_chats(user_id):
