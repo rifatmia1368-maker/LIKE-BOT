@@ -307,19 +307,19 @@ def handle_admin_command(message):
 # ==========================================
 # 🤖 BOT COMMANDS (UPDATED)
 # ==========================================
-@bot.message_handler(commands=['p0', 'p02', 'resetremain', 'y5', 'y6'])
+@bot.message_handler(commands=['p0', 'p02', 'remainreset', 'y5', 'y6'])
 def handle_admin_commands(message):
     global bot_is_on, bot_remain, user_usage
     if not admin_full_control(message.from_user.id): return 
     command = message.text.split()[0].lower()
     
-    if command in ['/p0', '/y5']:
+    if command in ['/p0', '/y1']:
         bot_is_on = True
         bot.reply_to(message, info_ui("SYSTEM ALIVE", "Bot has been turned **ON**."), parse_mode="Markdown")
-    elif command in ['/p02', '/y6']:
+    elif command in ['/p02', '/y0']:
         bot_is_on = False
         bot.reply_to(message, info_ui("SYSTEM SLEEP", "Bot has been turned **OFF**."), parse_mode="Markdown")
-    elif command == '/resetremain':
+    elif command == '/remainreset':
         bot_remain = 15
         save_remain(bot_remain)
         user_usage.clear()
@@ -351,7 +351,7 @@ def handle_freeon(message):
     threading.Thread(target=freeon_worker, args=(message.chat.id, seconds)).start()
 
 # --- VIP & GROUP COMMANDS ---
-@bot.message_handler(commands=['vipadd', 'removevip', 'viplist', 'allow', 'disallow', 'remains'])
+@bot.message_handler(commands=['vipadd', 'removevip', 'listvip', 'allow', 'disallow', 'remains'])
 def handle_vip_group_commands(message):
     cmd = message.text.split()[0].lower()
     user_id = message.from_user.id
@@ -488,8 +488,8 @@ def handle_autoremove(message):
     else:
         bot.reply_to(message, f"❌ No auto task found with UID: `{uid_to_remove}`", parse_mode="Markdown")
 
-@bot.message_handler(commands=['autolist'])
-def handle_autolist(message):
+@bot.message_handler(commands=['listauto'])
+def handle_listauto(message):
     if not admin_full_control(message.from_user.id): return
     db = load_auto_db()
     tasks = db.get('tasks', {})
