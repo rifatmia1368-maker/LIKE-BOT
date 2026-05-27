@@ -12,15 +12,15 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 # ==========================================
 # ⚙️ SECURE BOT CONFIGURATION
 # ==========================================
-TOKEN = '8926868360:AAGb9kvjfxrdbritVWvYTC7m751lKU6Hg0c' # Replace with your Token
+TOKEN = '8926868360:AAGb9kvjfxrdbritVWvYTC7m751lKU6Hg0c'  # Replace with your Token
 
 # 🌐 20 LIKES API CONFIG (Sends 20 likes)
 API_20_URL = 'https://riyad-like-api-ob-52.vercel.app'
 API_20_KEY = 'RIYADAH' 
 
 # 🌐 30 LIKES API CONFIG (Sends 30 likes)
-API_30_URL = 'https://xxxx.vercel.app'  # Replace with your actual API URL
-API_30_KEY = 'xxxx'  # Replace with your actual API key
+API_30_URL = 'http://2.56.246.128:30264'
+API_30_KEY = '1SAIFUL1'
 
 # 👑 Admin Settings
 ADMIN_IDS_FILE = 'admin_ids.json'
@@ -350,53 +350,180 @@ def handle_freeon(message):
     bot.reply_to(message, f"✅ Bot is temporarily ON for {seconds} seconds.")
     threading.Thread(target=freeon_worker, args=(message.chat.id, seconds)).start()
 
-# --- VIP & GROUP COMMANDS ---
-@bot.message_handler(commands=['vipadd', 'removevip', 'listvip', 'allow', 'disallow', 'remains'])
-def handle_vip_group_commands(message):
-    cmd = message.text.split()[0].lower()
+# ==========================================
+# 🎯 30 LIKES COMMAND
+# ==========================================
+@bot.message_handler(commands=['like30'])
+def handle_like30(message):
+    global bot_remain, user_usage
+
     user_id = message.from_user.id
-    
-    if cmd == '/remains':
+    user_name = message.from_user.first_name
+    vips = load_vip()
+    is_vip = str(user_id) in vips
+
+    if not is_admin(user_id):
         if not bot_is_on: return
-        vips = load_vip()
-        if is_admin(user_id): uses_left = "♾️ Unlimited (Admin)"
-        elif str(user_id) in vips: uses_left = f"{vips[str(user_id)]['limit'] - user_usage.get(user_id, 0)}/{vips[str(user_id)]['limit']} (VIP)"
-        else: uses_left = f"{USER_LIMIT - user_usage.get(user_id, 0)}/{USER_LIMIT}"
-        text = f"╭━〔 🌐 **𝗦𝗬𝗦𝗧𝗘𝗠 𝗥𝗘𝗠𝗔𝗜𝗡𝗦** 〕━⬣\n┃ 🤖 **𝗚𝗹𝗼𝗯𝗮𝗹 𝗕𝗼𝘁:** `{bot_remain}/15`\n┃ 👤 **𝗬𝗼𝘂𝗿 𝗟𝗶𝗺𝗶𝘁:** `{uses_left}`\n╰━━━━━━━━━━━━━━━━━━⬣"
-        return bot.reply_to(message, text, parse_mode="Markdown")
+        if not is_group_allowed(message.chat.id): return 
 
-    if not admin_full_control(user_id): return
-    args = message.text.split()
-
-    if cmd == '/vipadd' and len(args) == 3:
-        vips = load_vip()
-        vips[args[1]] = {"name": f"User ID: {args[1]}", "limit": int(args[2])}
-        save_vip(vips)
-        bot.reply_to(message, f"✅ VIP Added: {args[1]} (Limit: {args[2]})")
-    elif cmd == '/removevip' and len(args) == 2:
-        vips = load_vip()
-        if args[1] in vips: del vips[args[1]]; save_vip(vips); bot.reply_to(message, "🚫 VIP Removed.")
-    elif cmd == '/viplist':
-        vips = load_vip()
-        text = "╭━〔 🌟 **𝗩𝗜𝗣 𝗟𝗜𝗦𝗧** 〕━⬣\n"
-        for uid, data in vips.items(): text += f"┃ 👤 ID: `{uid}` - Limit: `{data['limit']}`\n"
-        text += "╰━━━━━━━━━━━━━━━━━━⬣"
-        bot.reply_to(message, text, parse_mode="Markdown")
-    elif cmd == '/allow' and len(args) == 2:
-        groups = load_groups()
-        dur = args[1].lower()
-        if dur == "unlimited": groups[str(message.chat.id)] = "unlimited"
+    if not is_admin(user_id):
+        if is_vip:
+            vip_limit = vips[str(user_id)]['limit']
+            if user_usage.get(user_id, 0) >= vip_limit:
+                bot.reply_to(message, error_ui("LIMIT REACHED", f"Sorry {user_name}, you have used your VIP daily limit."), parse_mode="Markdown")
+                return
         else:
-            try:
-                val, unit = int(dur[:-1]), dur[-1]
-                mult = {'d': 86400, 'm': 2592000, 'y': 31536000}.get(unit, 0)
-                if not mult: raise ValueError
-                groups[str(message.chat.id)] = time.time() + (val * mult)
-            except: return bot.reply_to(message, "❌ Invalid format.")
-        save_groups(groups); bot.reply_to(message, "✅ Group Allowed.")
-    elif cmd == '/disallow':
-        groups = load_groups()
-        if str(message.chat.id) in groups: del groups[str(message.chat.id)]; save_groups(groups); bot.reply_to(message, "🚫 Group Disallowed.")
+            if bot_remain <= 0:
+                bot.reply_to(message, error_ui("SYSTEM EMPTY", "Global bot limit exhausted."), parse_mode="Markdown")
+                return
+            if user_usage.get(user_id, 0) >= USER_LIMIT:
+                bot.reply_to(message, error_ui("LIMIT REACHED", f"Sorry {user_name}, you have used your daily limit."), parse_mode="Markdown")
+                return
+
+    args = message.text.split()
+    if len(args) != 3:
+        bot.reply_to(message, error_ui("INVALID FORMAT", "Use: `/like30 {region} {uid}`"), parse_mode="Markdown")
+        return
+
+    region = args[1].upper()
+    uid = args[2]
+
+    if region not in ALLOWED_REGIONS:
+        bot.reply_to(message, error_ui("INVALID REGION", f"Allowed: `{', '.join(ALLOWED_REGIONS)}`"), parse_mode="Markdown")
+        return
+
+    missing_chats = get_missing_chats(user_id)
+    if missing_chats:
+        pending_requests[user_id] = {'message': message, 'region': region, 'uid': uid, 'type': '30'}
+        markup = InlineKeyboardMarkup()
+        for chat in missing_chats:
+            markup.add(InlineKeyboardButton(text=f"📢 Join {chat['name']}", url=chat['url']))
+        markup.add(InlineKeyboardButton(text="✅ I've Joined - Verify", callback_data=f"verify_{user_id}"))
+        bot.reply_to(message, f"⚠️ You must join our sponsors!", reply_markup=markup)
+        return
+
+    process_like_request(message, region, uid, user_id, user_name, likes_count=30)
+
+# ==========================================
+# 🚀 STANDARD LIKE COMMAND (Uses 20 likes API)
+# ==========================================
+@bot.message_handler(commands=['like'])
+def handle_like(message):
+    global bot_remain, user_usage
+
+    user_id = message.from_user.id
+    user_name = message.from_user.first_name
+    vips = load_vip()
+    is_vip = str(user_id) in vips
+
+    if not is_admin(user_id):
+        if not bot_is_on: return
+        if not is_group_allowed(message.chat.id): return 
+
+    if not is_admin(user_id):
+        if is_vip:
+            vip_limit = vips[str(user_id)]['limit']
+            if user_usage.get(user_id, 0) >= vip_limit:
+                bot.reply_to(message, error_ui("LIMIT REACHED", f"Sorry {user_name}, you have used your VIP daily limit."), parse_mode="Markdown")
+                return
+        else:
+            if bot_remain <= 0:
+                bot.reply_to(message, error_ui("SYSTEM EMPTY", "Global bot limit exhausted."), parse_mode="Markdown")
+                return
+            if user_usage.get(user_id, 0) >= USER_LIMIT:
+                bot.reply_to(message, error_ui("LIMIT REACHED", f"Sorry {user_name}, you have used your daily limit."), parse_mode="Markdown")
+                return
+
+    args = message.text.split()
+    if len(args) != 3:
+        bot.reply_to(message, error_ui("INVALID FORMAT", "Use: `/like {region} {uid}`"), parse_mode="Markdown")
+        return
+
+    region = args[1].upper()
+    uid = args[2]
+
+    if region not in ALLOWED_REGIONS:
+        bot.reply_to(message, error_ui("INVALID REGION", f"Allowed: `{', '.join(ALLOWED_REGIONS)}`"), parse_mode="Markdown")
+        return
+
+    missing_chats = get_missing_chats(user_id)
+    if missing_chats:
+        pending_requests[user_id] = {'message': message, 'region': region, 'uid': uid, 'type': '20'}
+        markup = InlineKeyboardMarkup()
+        for chat in missing_chats:
+            markup.add(InlineKeyboardButton(text=f"📢 Join {chat['name']}", url=chat['url']))
+        markup.add(InlineKeyboardButton(text="✅ I've Joined - Verify", callback_data=f"verify_{user_id}"))
+        bot.reply_to(message, f"⚠️ You must join our sponsors!", reply_markup=markup)
+        return
+
+    process_like_request(message, region, uid, user_id, user_name, likes_count=20)
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('verify_'))
+def verify_join_callback(call):
+    clicker_id = call.from_user.id
+    target_user_id = int(call.data.split('_')[1])
+    if clicker_id != target_user_id:
+        return bot.answer_callback_query(call.id, "❌ This button belongs to another user!", show_alert=True)
+
+    if get_missing_chats(clicker_id):
+        bot.answer_callback_query(call.id, "❌ You haven't joined all channels yet!", show_alert=True)
+    else:
+        bot.answer_callback_query(call.id, "✅ Verified! Sending likes...", show_alert=False)
+        try: bot.delete_message(call.message.chat.id, call.message.message_id)
+        except: pass 
+        if clicker_id in pending_requests:
+            req = pending_requests.pop(clicker_id)
+            process_like_request(req['message'], req['region'], req['uid'], clicker_id, req['message'].from_user.first_name, req.get('type', '20') == '30' and 30 or 20)
+
+def process_like_request(message, region, uid, user_id, user_name, likes_count=20):
+    global bot_remain, user_usage
+    
+    # Select API based on likes count
+    if likes_count == 30:
+        base_api = API_30_URL
+        api_key = API_30_KEY
+        api_endpoint = f"{base_api}/like"
+    else:
+        base_api = API_20_URL
+        api_key = API_20_KEY
+        api_endpoint = f"{base_api}/like"
+    
+    wait_msg = bot.reply_to(message, "𝑷𝒓𝒐𝒄𝒆𝒔𝒔𝒊𝒏𝒈 𝒍𝒊𝒌𝒆𝒔 𝑺𝒆𝒏𝒅𝒊𝒏𝒈.....🚀")
+
+    try:
+        start_time = time.time() 
+        # Format URL for 30 likes API (different format)
+        if likes_count == 30:
+            url = f"{api_endpoint}?api_key={api_key}&server_name={region.lower()}&uid={uid}"
+        else:
+            url = f"{api_endpoint}?uid={uid}&server_name={region.lower()}&key={api_key}"
+        
+        response = requests.get(url, timeout=15) 
+        data = response.json()
+        
+        response_time = round(time.time() - start_time, 2)
+        status = data.get('status')
+
+        if status in [1, 2]:
+            vips = load_vip()
+            if not is_admin(user_id):
+                user_usage[user_id] = user_usage.get(user_id, 0) + 1
+                if str(user_id) not in vips:
+                    bot_remain -= 1
+                    save_remain(bot_remain)
+            
+            remain_requests = "♾️" if is_admin(user_id) else (vips[str(user_id)]['limit'] - user_usage.get(user_id, 0) if str(user_id) in vips else USER_LIMIT - user_usage.get(user_id, 0))
+            final_text = report_ui(data, region, status, response_time, remain_requests, likes_count)
+            bot.edit_message_text(chat_id=message.chat.id, message_id=wait_msg.message_id, text=final_text, parse_mode="HTML")
+
+        elif status == 0:
+            bot.edit_message_text(chat_id=message.chat.id, message_id=wait_msg.message_id, text=error_ui("FAILED", "Could not process UID. It may be invalid or maxed."), parse_mode="Markdown")
+        else:
+            bot.edit_message_text(chat_id=message.chat.id, message_id=wait_msg.message_id, text=error_ui("ERROR", "Service is temporarily unavailable."), parse_mode="Markdown")
+
+    except Exception as e:
+        print(f"Error: {e}")
+        bot.edit_message_text(chat_id=message.chat.id, message_id=wait_msg.message_id, text=error_ui("TIMEOUT", "Server is busy. Try again later."), parse_mode="Markdown")
 
 # ==========================================
 # 🚀 AUTO-TASK COMMANDS (UPDATED)
@@ -521,6 +648,56 @@ def handle_listauto(message):
     bot.reply_to(message, msg_body, parse_mode="HTML")
 
 # ==========================================
+# 🎯 VIP & GROUP COMMANDS
+# ==========================================
+@bot.message_handler(commands=['vipadd', 'removevip', 'listvip', 'allow', 'disallow', 'remains'])
+def handle_vip_group_commands(message):
+    cmd = message.text.split()[0].lower()
+    user_id = message.from_user.id
+    
+    if cmd == '/remains':
+        if not bot_is_on: return
+        vips = load_vip()
+        if is_admin(user_id): uses_left = "♾️ Unlimited (Admin)"
+        elif str(user_id) in vips: uses_left = f"{vips[str(user_id)]['limit'] - user_usage.get(user_id, 0)}/{vips[str(user_id)]['limit']} (VIP)"
+        else: uses_left = f"{USER_LIMIT - user_usage.get(user_id, 0)}/{USER_LIMIT}"
+        text = f"╭━〔 🌐 **𝗦𝗬𝗦𝗧𝗘𝗠 𝗥𝗘𝗠𝗔𝗜𝗡𝗦** 〕━⬣\n┃ 🤖 **𝗚𝗹𝗼𝗯𝗮𝗹 𝗕𝗼𝘁:** `{bot_remain}/15`\n┃ 👤 **𝗬𝗼𝘂𝗿 𝗟𝗶𝗺𝗶𝘁:** `{uses_left}`\n╰━━━━━━━━━━━━━━━━━━⬣"
+        return bot.reply_to(message, text, parse_mode="Markdown")
+
+    if not admin_full_control(user_id): return
+    args = message.text.split()
+
+    if cmd == '/vipadd' and len(args) == 3:
+        vips = load_vip()
+        vips[args[1]] = {"name": f"User ID: {args[1]}", "limit": int(args[2])}
+        save_vip(vips)
+        bot.reply_to(message, f"✅ VIP Added: {args[1]} (Limit: {args[2]})")
+    elif cmd == '/removevip' and len(args) == 2:
+        vips = load_vip()
+        if args[1] in vips: del vips[args[1]]; save_vip(vips); bot.reply_to(message, "🚫 VIP Removed.")
+    elif cmd == '/viplist':
+        vips = load_vip()
+        text = "╭━〔 🌟 **𝗩𝗜𝗣 𝗟𝗜𝗦𝗧** 〕━⬣\n"
+        for uid, data in vips.items(): text += f"┃ 👤 ID: `{uid}` - Limit: `{data['limit']}`\n"
+        text += "╰━━━━━━━━━━━━━━━━━━⬣"
+        bot.reply_to(message, text, parse_mode="Markdown")
+    elif cmd == '/allow' and len(args) == 2:
+        groups = load_groups()
+        dur = args[1].lower()
+        if dur == "unlimited": groups[str(message.chat.id)] = "unlimited"
+        else:
+            try:
+                val, unit = int(dur[:-1]), dur[-1]
+                mult = {'d': 86400, 'm': 2592000, 'y': 31536000}.get(unit, 0)
+                if not mult: raise ValueError
+                groups[str(message.chat.id)] = time.time() + (val * mult)
+            except: return bot.reply_to(message, "❌ Invalid format.")
+        save_groups(groups); bot.reply_to(message, "✅ Group Allowed.")
+    elif cmd == '/disallow':
+        groups = load_groups()
+        if str(message.chat.id) in groups: del groups[str(message.chat.id)]; save_groups(groups); bot.reply_to(message, "🚫 Group Disallowed.")
+
+# ==========================================
 # ⏰ BACKGROUND CRON JOB (BD TIMEZONE)
 # ==========================================
 def execute_auto_tasks():
@@ -538,11 +715,11 @@ def execute_auto_tasks():
         if package == 20:
             base_api = API_20_URL
             api_key = API_20_KEY
+            url = f"{base_api}/like?uid={uid}&server_name={region.lower()}&key={api_key}"
         else:  # package == 30
             base_api = API_30_URL
             api_key = API_30_KEY
-        
-        url = f"{base_api}/like?uid={uid}&server_name={region.lower()}&key={api_key}"
+            url = f"{base_api}/like?api_key={api_key}&server_name={region.lower()}&uid={uid}"
         
         start_time = time.time()
         try:
@@ -604,117 +781,6 @@ def cron_worker():
             
         time.sleep(30)
 
-# ==========================================
-# 🚀 STANDARD LIKE COMMAND (Uses 20 likes API)
-# ==========================================
-@bot.message_handler(commands=['like'])
-def handle_like(message):
-    global bot_remain, user_usage
-
-    user_id = message.from_user.id
-    user_name = message.from_user.first_name
-    vips = load_vip()
-    is_vip = str(user_id) in vips
-
-    if not is_admin(user_id):
-        if not bot_is_on: return
-        if not is_group_allowed(message.chat.id): return 
-
-    if not is_admin(user_id):
-        if is_vip:
-            vip_limit = vips[str(user_id)]['limit']
-            if user_usage.get(user_id, 0) >= vip_limit:
-                bot.reply_to(message, error_ui("LIMIT REACHED", f"Sorry {user_name}, you have used your VIP daily limit."), parse_mode="Markdown")
-                return
-        else:
-            if bot_remain <= 0:
-                bot.reply_to(message, error_ui("SYSTEM EMPTY", "Global bot limit exhausted."), parse_mode="Markdown")
-                return
-            if user_usage.get(user_id, 0) >= USER_LIMIT:
-                bot.reply_to(message, error_ui("LIMIT REACHED", f"Sorry {user_name}, you have used your daily limit."), parse_mode="Markdown")
-                return
-
-    args = message.text.split()
-    if len(args) != 3:
-        bot.reply_to(message, error_ui("INVALID FORMAT", "Use: `/like {region} {uid}`"), parse_mode="Markdown")
-        return
-
-    region = args[1].upper()
-    uid = args[2]
-
-    if region not in ALLOWED_REGIONS:
-        bot.reply_to(message, error_ui("INVALID REGION", f"Allowed: `{', '.join(ALLOWED_REGIONS)}`"), parse_mode="Markdown")
-        return
-
-    missing_chats = get_missing_chats(user_id)
-    if missing_chats:
-        pending_requests[user_id] = {'message': message, 'region': region, 'uid': uid}
-        markup = InlineKeyboardMarkup()
-        for chat in missing_chats:
-            markup.add(InlineKeyboardButton(text=f"📢 Join {chat['name']}", url=chat['url']))
-        markup.add(InlineKeyboardButton(text="✅ I've Joined - Verify", callback_data=f"verify_{user_id}"))
-        bot.reply_to(message, f"⚠️ You must join our sponsors!", reply_markup=markup)
-        return
-
-    process_like_request(message, region, uid, user_id, user_name)
-
-@bot.callback_query_handler(func=lambda call: call.data.startswith('verify_'))
-def verify_join_callback(call):
-    clicker_id = call.from_user.id
-    target_user_id = int(call.data.split('_')[1])
-    if clicker_id != target_user_id:
-        return bot.answer_callback_query(call.id, "❌ This button belongs to another user!", show_alert=True)
-
-    if get_missing_chats(clicker_id):
-        bot.answer_callback_query(call.id, "❌ You haven't joined all channels yet!", show_alert=True)
-    else:
-        bot.answer_callback_query(call.id, "✅ Verified! Sending likes...", show_alert=False)
-        try: bot.delete_message(call.message.chat.id, call.message.message_id)
-        except: pass 
-        if clicker_id in pending_requests:
-            req = pending_requests.pop(clicker_id)
-            process_like_request(req['message'], req['region'], req['uid'], clicker_id, req['message'].from_user.first_name)
-
-def process_like_request(message, region, uid, user_id, user_name):
-    global bot_remain, user_usage
-    
-    # Manual /like command uses 20 likes API
-    likes_sent = 20
-    base_api = API_20_URL
-    api_key = API_20_KEY
-    
-    wait_msg = bot.reply_to(message, "𝑷𝒓𝒐𝒄𝒆𝒔𝒔𝒊𝒏𝒈 𝒍𝒊𝒌𝒆𝒔 𝑺𝒆𝒏𝒅𝒊𝒏𝒈.....🚀")
-
-    try:
-        start_time = time.time() 
-        url = f"{base_api}/like?uid={uid}&server_name={region.lower()}&key={api_key}"
-        
-        response = requests.get(url, timeout=15) 
-        data = response.json()
-        
-        response_time = round(time.time() - start_time, 2)
-        status = data.get('status')
-
-        if status in [1, 2]:
-            vips = load_vip()
-            if not is_admin(user_id):
-                user_usage[user_id] = user_usage.get(user_id, 0) + 1
-                if str(user_id) not in vips:
-                    bot_remain -= 1
-                    save_remain(bot_remain)
-            
-            remain_requests = "♾️" if is_admin(user_id) else (vips[str(user_id)]['limit'] - user_usage.get(user_id, 0) if str(user_id) in vips else USER_LIMIT - user_usage.get(user_id, 0))
-            final_text = report_ui(data, region, status, response_time, remain_requests, likes_sent)
-            bot.edit_message_text(chat_id=message.chat.id, message_id=wait_msg.message_id, text=final_text, parse_mode="HTML")
-
-        elif status == 0:
-            bot.edit_message_text(chat_id=message.chat.id, message_id=wait_msg.message_id, text=error_ui("FAILED", "Could not process UID. It may be invalid or maxed."), parse_mode="Markdown")
-        else:
-            bot.edit_message_text(chat_id=message.chat.id, message_id=wait_msg.message_id, text=error_ui("ERROR", "Service is temporarily unavailable."), parse_mode="Markdown")
-
-    except Exception as e:
-        bot.edit_message_text(chat_id=message.chat.id, message_id=wait_msg.message_id, text=error_ui("TIMEOUT", "Server is busy. Try again later."), parse_mode="Markdown")
-
 if __name__ == "__main__":
     print("🚀 Premium Bot is starting securely...")
     print(f"📌 Master Admin: 7603719412")
@@ -730,6 +796,7 @@ if __name__ == "__main__":
     print("   - /likeauto (Auto Like Command)")
     print("   - /autotime (Set Auto Task Time)")
     print("   - /autoremove {uid} (Remove Auto Task by UID)")
+    print("   - /like (20 Likes) | /like30 (30 Likes)")
     print("   - 20 Likes API | 30 Likes API")
     
     # Start Cron Worker in background
