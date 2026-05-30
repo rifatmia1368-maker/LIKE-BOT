@@ -56,7 +56,7 @@ AUTO_DB_FILE = 'auto_likes.json'
 
 # Global State Variables
 bot_is_on = True
-USER_LIMIT = 1
+USER_LIMIT = 1  # Default limit for normal users
 user_usage = {}
 pending_requests = {}
 
@@ -102,7 +102,18 @@ def save_groups(data):
     save_json(GROUPS_FILE, data)
 
 def load_auto_db(): 
-    default = {"time": "08:57 AM", "last_run": "", "tasks": {}, "next_serial": 1}
+    default = {
+        "time": "08:57 AM", 
+        "last_run": "", 
+        "tasks": {}, 
+        "next_serial": 1,
+        "stats": {
+            "total_20_tasks": 0,
+            "total_30_tasks": 0,
+            "total_likes_sent_20": 0,
+            "total_likes_sent_30": 0
+        }
+    }
     return load_json(AUTO_DB_FILE, default)
 
 def save_auto_db(data): 
@@ -118,12 +129,16 @@ def save_remain(remain_value):
 bot_remain = load_remain()
 
 def is_group_allowed(chat_id):
+    """Check if a group is allowed to use the bot (supports multiple groups)"""
     groups = load_groups()
     chat_id_str = str(chat_id)
     if chat_id_str in groups:
         expiration = groups[chat_id_str]
-        if expiration == "unlimited": return True
-        if time.time() < expiration: return True
+        if expiration == "unlimited": 
+            return True
+        if time.time() < expiration: 
+            return True
+        # Expired, remove it
         del groups[chat_id_str]
         save_groups(groups)
     return False
@@ -305,6 +320,34 @@ def handle_admin_command(message):
 👑 Master Admin (7603719412) cannot be removed.""", parse_mode="Markdown")
 
 # ==========================================
+# 🔧 USER LIMIT COMMAND (New Feature)
+# ==========================================
+@bot.message_handler(commands=['limit'])
+def handle_limit_command(message):
+    """Change daily limit for users (admins only)"""
+    if not admin_full_control(message.from_user.id):
+        bot.reply_to(message, "❌ You are not authorized to use this command!", parse_mode="Markdown")
+        return
+    
+    args = message.text.split()
+    if len(args) != 2:
+        bot.reply_to(message, "⚠️ **Usage:** `/limit <number>`\nExample: `/limit 5`\n\n📌 This sets the daily limit for normal users.", parse_mode="Markdown")
+        return
+    
+    try:
+        new_limit = int(args[1])
+        if new_limit < 1:
+            bot.reply_to(message, "❌ Limit must be at least 1!", parse_mode="Markdown")
+            return
+        
+        global USER_LIMIT
+        USER_LIMIT = new_limit
+        bot.reply_to(message, f"✅ **User Daily Limit Updated!**\n📊 New limit: `{USER_LIMIT}` requests per day for normal users.", parse_mode="Markdown")
+        
+    except ValueError:
+        bot.reply_to(message, "❌ Please provide a valid number!", parse_mode="Markdown")
+
+# ==========================================
 # 🤖 BOT COMMANDS (UPDATED)
 # ==========================================
 @bot.message_handler(commands=['p0', 'p02', 'remainreset', 'y5', 'y6'])
@@ -364,7 +407,6 @@ def handle_like30(message):
 
     if not is_admin(user_id):
         if not bot_is_on: return
-        if not is_group_allowed(message.chat.id): return 
 
     if not is_admin(user_id):
         if is_vip:
@@ -418,7 +460,6 @@ def handle_like(message):
 
     if not is_admin(user_id):
         if not bot_is_on: return
-        if not is_group_allowed(message.chat.id): return 
 
     if not is_admin(user_id):
         if is_vip:
@@ -526,7 +567,7 @@ def process_like_request(message, region, uid, user_id, user_name, likes_count=2
         bot.edit_message_text(chat_id=message.chat.id, message_id=wait_msg.message_id, text=error_ui("TIMEOUT", "Server is busy. Try again later."), parse_mode="Markdown")
 
 # ==========================================
-# 🚀 AUTO-TASK COMMANDS (UPDATED)
+# 🚀 AUTO-TASK COMMANDS (PACKAGE WISE PERSISTENT)
 # ==========================================
 @bot.message_handler(commands=['autotime'])
 def handle_autotime(message):
@@ -569,6 +610,12 @@ def handle_likeauto(message):
     db = load_auto_db()
     serial_num = str(db['next_serial']).zfill(4) 
     db['next_serial'] += 1
+    
+    # Update package-wise stats
+    if package == 20:
+        db['stats']['total_20_tasks'] += 1
+    else:
+        db['stats']['total_30_tasks'] += 1
 
     db['tasks'][serial_num] = {
         "chat_id": message.chat.id,
@@ -579,73 +626,172 @@ def handle_likeauto(message):
         "sent": 0,
         "remain": total_likes,
         "days": days,
-        "nickname": "Waiting for run..."
+        "days_completed": 0,
+        "nickname": "Waiting for run...",
+        "created_at": time.time(),
+        "status": "active"
     }
     save_auto_db(db)
     
-    bot.reply_to(message, f"✅ **Auto Task Added!**\n🎓 Task No: `{serial_num}`\n🆔 UID: `{uid}`\n💳 Package: `{package}` for `{days}` days", parse_mode="Markdown")
+    bot.reply_to(message, f"""✅ **Auto Task Added Successfully!**
+━━━━━━━━━━━━━━━━━━━━━━━
+🎓 Task No: `{serial_num}`
+🆔 UID: `{uid}`
+🌍 Region: `{region}`
+💳 Package: `{package}` Likes/Day
+📅 Duration: `{days}` Days
+🎯 Total Likes: `{total_likes}`
+
+📊 Package Statistics:
+├─ 20 Likes Tasks: `{db['stats']['total_20_tasks']}`
+└─ 30 Likes Tasks: `{db['stats']['total_30_tasks']}`""", parse_mode="Markdown")
 
 @bot.message_handler(commands=['autoremove'])
 def handle_autoremove(message):
     if not admin_full_control(message.from_user.id): return
     args = message.text.split()
     if len(args) != 2:
-        bot.reply_to(message, "⚠️ **Usage:** `/autoremove {uid}`\nExample: `/autoremove 1234567890`", parse_mode="Markdown")
+        bot.reply_to(message, "⚠️ **Usage:** `/autoremove {uid}`\nExample: `/autoremove 1234567890`\nOr use: `/autoremove task_{serial}`", parse_mode="Markdown")
         return
     
-    uid_to_remove = args[1]
+    remove_param = args[1]
     db = load_auto_db()
     tasks = db.get('tasks', {})
     
     found = False
     removed_tasks = []
     
-    for serial, task in list(tasks.items()):
-        if task['uid'] == uid_to_remove:
+    # Check if removing by UID or serial number
+    if remove_param.startswith('task_'):
+        serial = remove_param.replace('task_', '')
+        if serial in tasks:
+            task = tasks[serial]
             removed_tasks.append((serial, task))
             del db['tasks'][serial]
             found = True
+            # Update package-wise stats
+            if task['package'] == 20:
+                db['stats']['total_20_tasks'] = max(0, db['stats']['total_20_tasks'] - 1)
+            else:
+                db['stats']['total_30_tasks'] = max(0, db['stats']['total_30_tasks'] - 1)
+    else:
+        # Remove by UID
+        for serial, task in list(tasks.items()):
+            if task['uid'] == remove_param:
+                removed_tasks.append((serial, task))
+                del db['tasks'][serial]
+                found = True
+                # Update package-wise stats
+                if task['package'] == 20:
+                    db['stats']['total_20_tasks'] = max(0, db['stats']['total_20_tasks'] - 1)
+                else:
+                    db['stats']['total_30_tasks'] = max(0, db['stats']['total_30_tasks'] - 1)
     
     if found:
         save_auto_db(db)
-        msg = f"✅ **Removed {len(removed_tasks)} task(s) with UID:** `{uid_to_remove}`\n"
+        msg = f"✅ **Removed {len(removed_tasks)} task(s)**\n━━━━━━━━━━━━━━━━━━━━━━━\n"
         for serial, task in removed_tasks:
-            msg += f"└─ 🎓 Task No: `{serial}` | Package: `{task['package']}`\n"
+            msg += f"""🎓 Task No: `{serial}`
+├─ UID: `{task['uid']}`
+├─ Package: `{task['package']}` Likes
+├─ Sent: `{task['sent']}/{task['total_target']}`
+└─ Status: Removed\n\n"""
         bot.reply_to(message, msg, parse_mode="Markdown")
     else:
-        bot.reply_to(message, f"❌ No auto task found with UID: `{uid_to_remove}`", parse_mode="Markdown")
+        bot.reply_to(message, f"❌ No auto task found with identifier: `{remove_param}`", parse_mode="Markdown")
 
 @bot.message_handler(commands=['listauto'])
 def handle_listauto(message):
     if not admin_full_control(message.from_user.id): return
     db = load_auto_db()
     tasks = db.get('tasks', {})
+    stats = db.get('stats', {"total_20_tasks": 0, "total_30_tasks": 0, "total_likes_sent_20": 0, "total_likes_sent_30": 0})
     
     count_20 = sum(1 for t in tasks.values() if t['package'] == 20)
     count_30 = sum(1 for t in tasks.values() if t['package'] == 30)
+    total_likes_sent_20 = sum(t.get('sent', 0) for t in tasks.values() if t['package'] == 20)
+    total_likes_sent_30 = sum(t.get('sent', 0) for t in tasks.values() if t['package'] == 30)
     
-    header = f"""<blockquote><b>📊 MEMBERSHIP DATABASE 📊</b></blockquote>
+    header = f"""<blockquote><b>📊 AUTO-LIKE DATABASE 📊</b></blockquote>
 <blockquote><b>📈 SYSTEM OVERVIEW:</b>
-├─ 👥 TOTAL ACTIVE : {len(tasks)}
-├─ ⏳ TOTAL QUEUED : 0
-├─ 💙 20 LIKES : {str(count_20).zfill(2)}
-└─ ❤️‍🔥 30 LIKES : {str(count_30).zfill(2)}</blockquote>
-<blockquote><b>⏰ AUTO TASK TIME : {db.get('time', 'Not Set')} (BD)</b></blockquote>\n"""
+├─ 👥 TOTAL ACTIVE TASKS : {len(tasks)}
+├─ 💙 20 LIKES TASKS : {count_20}
+├─ ❤️‍🔥 30 LIKES TASKS : {count_30}
+├─ 📊 Total 20 Likes Sent: {total_likes_sent_20}
+├─ 📊 Total 30 Likes Sent: {total_likes_sent_30}
+└─ ⏰ NEXT RUN TIME : {db.get('time', 'Not Set')} (BD)</blockquote>\n"""
 
     msg_body = header
-    for serial, data in tasks.items():
-        nickname = data.get('nickname', 'Unknown')
-        user_block = f"""<blockquote>👤 {nickname}
-├─ 🆔 <code>{data['uid']}</code> | 🇧🇩 {data['region']}
-├─ ➡️ PACKAGE TYPE : {data['package']} LIKES
-├─ 📊 SENT: {data['sent']} | REMAIN: {data['remain']} ⚡
-└─ 🎓 TASK NO: {serial}</blockquote>\n"""
-        msg_body += user_block
+    if tasks:
+        # Separate tasks by package type
+        tasks_20 = [(s, t) for s, t in tasks.items() if t['package'] == 20]
+        tasks_30 = [(s, t) for s, t in tasks.items() if t['package'] == 30]
+        
+        if tasks_20:
+            msg_body += "\n<blockquote><b>💙 20 LIKES TASKS</b></blockquote>\n"
+            for serial, data in tasks_20[:10]:  # Limit to 10 per type to avoid message too long
+                nickname = data.get('nickname', 'Unknown')
+                progress = int((data['sent'] / data['total_target']) * 100) if data['total_target'] > 0 else 0
+                msg_body += f"""<blockquote>🎓 <b>TASK {serial}</b>
+├─ 👤 {nickname}
+├─ 🆔 <code>{data['uid']}</code> | {data['region']}
+├─ 💳 {data['package']} LIKES/DAY
+├─ 📊 SENT: {data['sent']} | REMAIN: {data['remain']}
+├─ 📈 PROGRESS: {progress}%
+└─ ⏳ DAYS LEFT: {data['days'] - data['days_completed']}</blockquote>\n"""
+        
+        if tasks_30:
+            msg_body += "\n<blockquote><b>❤️‍🔥 30 LIKES TASKS</b></blockquote>\n"
+            for serial, data in tasks_30[:10]:
+                nickname = data.get('nickname', 'Unknown')
+                progress = int((data['sent'] / data['total_target']) * 100) if data['total_target'] > 0 else 0
+                msg_body += f"""<blockquote>🎓 <b>TASK {serial}</b>
+├─ 👤 {nickname}
+├─ 🆔 <code>{data['uid']}</code> | {data['region']}
+├─ 💳 {data['package']} LIKES/DAY
+├─ 📊 SENT: {data['sent']} | REMAIN: {data['remain']}
+├─ 📈 PROGRESS: {progress}%
+└─ ⏳ DAYS LEFT: {data['days'] - data['days_completed']}</blockquote>\n"""
+    else:
+        msg_body += "<i>✨ No active auto tasks currently. Use /likeauto to add tasks!</i>"
 
-    if not tasks:
-        msg_body += "<i>No active auto tasks currently.</i>"
+    # Split message if too long
+    if len(msg_body) > 4000:
+        parts = [msg_body[i:i+4000] for i in range(0, len(msg_body), 4000)]
+        for part in parts:
+            bot.reply_to(message, part, parse_mode="HTML")
+    else:
+        bot.reply_to(message, msg_body, parse_mode="HTML")
 
-    bot.reply_to(message, msg_body, parse_mode="HTML")
+@bot.message_handler(commands=['autostats'])
+def handle_autostats(message):
+    """Show detailed statistics about auto tasks"""
+    if not admin_full_control(message.from_user.id): return
+    db = load_auto_db()
+    stats = db.get('stats', {})
+    tasks = db.get('tasks', {})
+    
+    total_20_sent = stats.get('total_likes_sent_20', 0)
+    total_30_sent = stats.get('total_likes_sent_30', 0)
+    
+    text = f"""╭━〔 📊 **AUTO-LIKE STATISTICS** 〕━⬣
+┃
+├─ 📈 **TASK OVERVIEW**
+├─ 👥 Active Tasks: `{len(tasks)}`
+├─ 💙 20-Likes Tasks: `{stats.get('total_20_tasks', 0)}`
+├─ ❤️‍🔥 30-Likes Tasks: `{stats.get('total_30_tasks', 0)}`
+┃
+├─ 📊 **LIKES SENT (ALL TIME)**
+├─ 💙 Total 20-Likes: `{total_20_sent}`
+├─ ❤️‍🔥 Total 30-Likes: `{total_30_sent}`
+├─ 🎯 Total Combined: `{total_20_sent + total_30_sent}`
+┃
+├─ ⏰ **SCHEDULE**
+├─ 🕐 Next Run Time: `{db.get('time', 'Not Set')}`
+├─ 📅 Last Run Date: `{db.get('last_run', 'Never')}`
+┃
+╰━━━━━━━━━━━━━━━━━━⬣"""
+    bot.reply_to(message, text, parse_mode="Markdown")
 
 # ==========================================
 # 🎯 VIP & GROUP COMMANDS
@@ -683,33 +829,49 @@ def handle_vip_group_commands(message):
         bot.reply_to(message, text, parse_mode="Markdown")
     elif cmd == '/allow' and len(args) == 2:
         groups = load_groups()
+        chat_id_str = str(message.chat.id)
         dur = args[1].lower()
-        if dur == "unlimited": groups[str(message.chat.id)] = "unlimited"
+        if dur == "unlimited": 
+            groups[chat_id_str] = "unlimited"
         else:
             try:
                 val, unit = int(dur[:-1]), dur[-1]
                 mult = {'d': 86400, 'm': 2592000, 'y': 31536000}.get(unit, 0)
                 if not mult: raise ValueError
-                groups[str(message.chat.id)] = time.time() + (val * mult)
-            except: return bot.reply_to(message, "❌ Invalid format.")
-        save_groups(groups); bot.reply_to(message, "✅ Group Allowed.")
+                groups[chat_id_str] = time.time() + (val * mult)
+            except: 
+                return bot.reply_to(message, "❌ Invalid format. Use: `/allow 7d` or `/allow unlimited`", parse_mode="Markdown")
+        save_groups(groups)
+        bot.reply_to(message, f"✅ This group has been allowed to use the bot!", parse_mode="Markdown")
     elif cmd == '/disallow':
         groups = load_groups()
-        if str(message.chat.id) in groups: del groups[str(message.chat.id)]; save_groups(groups); bot.reply_to(message, "🚫 Group Disallowed.")
+        chat_id_str = str(message.chat.id)
+        if chat_id_str in groups: 
+            del groups[chat_id_str]
+            save_groups(groups)
+            bot.reply_to(message, "🚫 This group has been disallowed from using the bot.", parse_mode="Markdown")
+        else:
+            bot.reply_to(message, "ℹ️ This group was not in the allowed list.", parse_mode="Markdown")
 
 # ==========================================
-# ⏰ BACKGROUND CRON JOB (BD TIMEZONE)
+# ⏰ BACKGROUND CRON JOB (BD TIMEZONE) - PERSISTENT WITH PACKAGE TRACKING
 # ==========================================
 def execute_auto_tasks():
     db = load_auto_db()
     tasks = db.get("tasks", {})
-    if not tasks: return
+    if not tasks: 
+        print("📭 No auto tasks to execute")
+        return
 
+    print(f"🚀 Executing {len(tasks)} auto tasks...")
+    
     for serial, task in list(tasks.items()):
         uid = task['uid']
         region = task['region']
         package = task['package']
         chat_id = task['chat_id']
+        
+        print(f"📌 Processing Task {serial}: UID={uid}, Package={package}")
         
         # 🔄 DYNAMIC API SELECTION BASED ON PACKAGE
         if package == 20:
@@ -738,24 +900,46 @@ def execute_auto_tasks():
                 task['remain'] -= added
                 task['nickname'] = nickname
                 
+                # Update package-wise statistics
+                if package == 20:
+                    db['stats']['total_likes_sent_20'] = db['stats'].get('total_likes_sent_20', 0) + added
+                else:
+                    db['stats']['total_likes_sent_30'] = db['stats'].get('total_likes_sent_30', 0) + added
+                
                 msg_text = auto_report_ui(True, package, response_time, nickname, uid, region, before, added, after, serial)
                 bot.send_message(chat_id, msg_text, parse_mode="HTML")
+                print(f"✅ Task {serial} SUCCESS: Sent {added} likes")
             else:
                 msg_text = auto_report_ui(False, package, response_time, nickname, uid, region, before, 0, after, serial, "ALREADY MAX")
                 bot.send_message(chat_id, msg_text, parse_mode="HTML")
+                print(f"⚠️ Task {serial} FAILED: Status {status}")
                 
         except Exception as e:
-            print(f"[AUTO TASK ERROR] {uid}: {e}")
+            print(f"❌ Task {serial} ERROR: {e}")
             bot.send_message(chat_id, f"⚠️ Auto Task Failed for Task No: {serial} (Timeout/Error).")
 
-        if task['remain'] <= 0:
-            bot.send_message(chat_id, f"✅ <b>Task {serial} Completed!</b> Target likes reached. Removed from DB.", parse_mode="HTML")
-            del db['tasks'][serial]
-        
+        # Save progress after each task
         save_auto_db(db)
-        time.sleep(5)
+        
+        # Check if task is completed
+        if task['remain'] <= 0:
+            task['days_completed'] = task['days']
+            bot.send_message(chat_id, f"✅ <b>Task {serial} Completed!</b> Target likes reached. Removed from DB.", parse_mode="HTML")
+            # Remove completed task
+            db = load_auto_db()  # Reload to get latest
+            if serial in db.get('tasks', {}):
+                # Update stats before removing
+                if db['tasks'][serial]['package'] == 20:
+                    db['stats']['total_20_tasks'] = max(0, db['stats'].get('total_20_tasks', 0) - 1)
+                else:
+                    db['stats']['total_30_tasks'] = max(0, db['stats'].get('total_30_tasks', 0) - 1)
+                del db['tasks'][serial]
+                save_auto_db(db)
+        
+        time.sleep(5)  # Delay between tasks to avoid rate limits
 
 def cron_worker():
+    """Persistent cron worker that survives bot restarts"""
     print("⏳ Auto-Task Cron Started (Checking BD Timezone)...")
     tz = pytz.timezone('Asia/Dhaka')
     
@@ -771,6 +955,7 @@ def cron_worker():
             
             if current_time_str == target_time and last_run != current_date_str:
                 print(f"🚀 Executing Auto Tasks for {current_date_str} at {current_time_str}")
+                # Update last_run immediately to prevent duplicate runs
                 db['last_run'] = current_date_str
                 save_auto_db(db) 
                 
@@ -779,28 +964,36 @@ def cron_worker():
         except Exception as e:
             print(f"Cron Worker Error: {e}")
             
-        time.sleep(30)
+        time.sleep(30)  # Check every 30 seconds
 
 if __name__ == "__main__":
     print("🚀 Premium Bot is starting securely...")
     print(f"📌 Master Admin: 7603719412")
     print(f"📌 Total Admins: {len(ADMIN_IDS)}")
+    print(f"📌 User Daily Limit: {USER_LIMIT}")
     print("📌 Admin Commands:")
     print("   - /admin add <user_id> - Add new admin")
     print("   - /admin remove <user_id> - Remove admin")
     print("   - /admin list - List all admins")
+    print("   - /limit <number> - Set user daily limit")
+    print("📌 Auto-Like Commands (Package Wise):")
+    print("   - /likeauto {region} {uid} {20/30} {days} - Add auto task")
+    print("   - /listauto - List all auto tasks (grouped by package)")
+    print("   - /autoremove {uid} - Remove auto tasks")
+    print("   - /autostats - Show package-wise statistics")
+    print("   - /autotime HH:MM AM/PM - Set execution time")
     print("📌 Other Commands:")
     print("   - /p0 (Turn ON) | /p02 (Turn OFF)")
     print("   - /freeon (Temporary ON)")
     print("   - /vipadd (Add VIP)")
-    print("   - /likeauto (Auto Like Command)")
-    print("   - /autotime (Set Auto Task Time)")
-    print("   - /autoremove {uid} (Remove Auto Task by UID)")
     print("   - /like (20 Likes) | /like30 (30 Likes)")
-    print("   - 20 Likes API | 30 Likes API")
+    print("   - /allow (Allow current group)")
+    print("   - /disallow (Disallow current group)")
+    print("   - /remainreset (Reset global limits)")
     
     # Start Cron Worker in background
-    threading.Thread(target=cron_worker, daemon=True).start()
+    cron_thread = threading.Thread(target=cron_worker, daemon=True)
+    cron_thread.start()
     
     while True:
         try:
