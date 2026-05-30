@@ -25,29 +25,145 @@ ADMIN_IDS_FILE = 'admin_ids.json'
 DEFAULT_ADMINS = [7603719412]
 
 # ==========================================
-# 📁 FILE PATH FIX FOR RAILWAY
+# 📁 FILE PATH FOR RAILWAY
 # ==========================================
-# Railway তে সঠিক পাথ নিশ্চিত করা
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'bot_data')
 
-# Data directory তৈরি করা (যদি না থাকে)
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
     print(f"📁 Created data directory: {DATA_DIR}")
 
-# ফাইলের পাথগুলি
+# ফাইলের পাথ
 REMAIN_FILE = os.path.join(DATA_DIR, 'remain_syreo.json')
 GROUPS_FILE = os.path.join(DATA_DIR, 'group_ids.json')
 VIP_FILE = os.path.join(DATA_DIR, 'vip.json')
 AUTO_DB_FILE = os.path.join(DATA_DIR, 'auto_likes.json')
 ADMIN_IDS_FILE_PATH = os.path.join(DATA_DIR, 'admin_ids.json')
 
-print(f"📂 Data directory: {DATA_DIR}")
-print(f"📄 Auto DB path: {AUTO_DB_FILE}")
+# ==========================================
+# 📂 DATA RECOVERY FUNCTION
+# ==========================================
+def recover_old_data():
+    """পুরানো ডাটা রিকভার করার ফাংশন"""
+    print("\n🔍 Checking for old data files...")
+    
+    # চেক করুন আগের লোকেশনে ফাইল আছে কিনা
+    old_locations = [
+        'auto_likes.json',  # রুট ডিরেক্টরি
+        './auto_likes.json',
+        '../auto_likes.json',
+        '/app/auto_likes.json'  # Railway পুরানো পাথ
+    ]
+    
+    recovered_tasks = {}
+    found_any = False
+    
+    for old_path in old_locations:
+        if os.path.exists(old_path):
+            print(f"📄 Found old file at: {old_path}")
+            try:
+                with open(old_path, 'r') as f:
+                    old_data = json.load(f)
+                    
+                # চেক করুন এতে টাস্ক আছে কিনা
+                if 'tasks' in old_data and old_data['tasks']:
+                    recovered_tasks.update(old_data['tasks'])
+                    found_any = True
+                    print(f"✅ Recovered {len(old_data['tasks'])} tasks from {old_path}")
+                    
+                elif isinstance(old_data, dict):
+                    # যদি সরাসরি টাস্ক থাকে
+                    for key, value in old_data.items():
+                        if isinstance(value, dict) and 'uid' in value and 'package' in value:
+                            recovered_tasks[key] = value
+                            found_any = True
+                    if found_any:
+                        print(f"✅ Recovered {len(recovered_tasks)} tasks from {old_path}")
+                
+                # ব্যাকআপ তৈরি করুন
+                backup_path = f"{old_path}.backup"
+                with open(backup_path, 'w') as f:
+                    json.dump(old_data, f, indent=4)
+                print(f"📦 Backup created: {backup_path}")
+                
+            except Exception as e:
+                print(f"❌ Error reading {old_path}: {e}")
+    
+    return recovered_tasks, found_any
+
+def fix_and_load_database():
+    """ডাটাবেস ফিক্স এবং লোড করা"""
+    print("\n" + "="*50)
+    print("🔧 FIXING DATABASE...")
+    print("="*50)
+    
+    # পুরানো ডাটা রিকভার করুন
+    recovered_tasks, found_old = recover_old_data()
+    
+    # বর্তমান ডাটাবেস লোড করুন
+    current_db = {}
+    if os.path.exists(AUTO_DB_FILE):
+        try:
+            with open(AUTO_DB_FILE, 'r') as f:
+                current_db = json.load(f)
+            print(f"\n📖 Current DB has {len(current_db.get('tasks', {}))} tasks")
+        except:
+            current_db = {}
+    
+    # ম্যানুয়ালি টাস্ক যোগ করার অপশন
+    if not recovered_tasks and not current_db.get('tasks'):
+        print("\n⚠️ No automatic recovery found!")
+        print("Please add tasks manually using: /likeauto BD UID 20 7")
+        
+        # একটি ডেমো টাস্ক দেখানো
+        print("\n📝 Example command:")
+        print("   /likeauto BD 1234567890 20 7")
+        
+    else:
+        # রিকভার করা টাস্ক মার্জ করুন
+        if recovered_tasks:
+            if 'tasks' not in current_db:
+                current_db['tasks'] = {}
+            current_db['tasks'].update(recovered_tasks)
+            
+            # স্ট্যাটাস আপডেট করুন
+            if 'stats' not in current_db:
+                current_db['stats'] = {"total_20_tasks": 0, "total_30_tasks": 0, "total_likes_sent_20": 0, "total_likes_sent_30": 0}
+            
+            # কাউন্ট আপডেট
+            count_20 = sum(1 for t in current_db['tasks'].values() if t.get('package') == 20)
+            count_30 = sum(1 for t in current_db['tasks'].values() if t.get('package') == 30)
+            current_db['stats']['total_20_tasks'] = count_20
+            current_db['stats']['total_30_tasks'] = count_30
+            
+            if 'next_serial' not in current_db:
+                current_db['next_serial'] = len(current_db['tasks']) + 1
+            if 'time' not in current_db:
+                current_db['time'] = "08:57 AM"
+            if 'last_run' not in current_db:
+                current_db['last_run'] = ""
+            
+            # সেভ করুন
+            with open(AUTO_DB_FILE, 'w') as f:
+                json.dump(current_db, f, indent=4)
+            
+            print(f"\n✅ SUCCESS! Recovered {len(recovered_tasks)} tasks")
+            print(f"   Total tasks now: {len(current_db['tasks'])}")
+            print(f"   💙 20 Likes tasks: {count_20}")
+            print(f"   ❤️ 30 Likes tasks: {count_30}")
+            
+            # টাস্কগুলো দেখান
+            print("\n📋 Recovered Tasks:")
+            for serial, task in recovered_tasks.items():
+                print(f"   🎓 {serial}: {task.get('uid')} - {task.get('package')} likes")
+            
+            return current_db
+    
+    return current_db
 
 # ==========================================
-# 📂 FILE MANAGERS WITH DEBUG
+# LOAD FUNCTIONS WITH FIX
 # ==========================================
 def load_admin_ids():
     if os.path.exists(ADMIN_IDS_FILE_PATH):
@@ -59,7 +175,6 @@ def load_admin_ids():
             print(f"Error loading admin IDs: {e}")
             return DEFAULT_ADMINS.copy()
     else:
-        print(f"⚠️ Admin file not found, creating new one")
         save_admin_ids(DEFAULT_ADMINS)
     return DEFAULT_ADMINS.copy()
 
@@ -67,7 +182,6 @@ def save_admin_ids(admin_ids):
     try:
         with open(ADMIN_IDS_FILE_PATH, 'w') as f:
             json.dump({'admin_ids': admin_ids}, f, indent=4)
-        print(f"✅ Admin IDs saved to {ADMIN_IDS_FILE_PATH}")
         return True
     except Exception as e:
         print(f"Error saving admin IDs: {e}")
@@ -91,31 +205,23 @@ def admin_full_control(user_id):
     return is_admin(user_id)
 
 def load_json(filepath, default):
-    """সঠিকভাবে JSON ফাইল লোড করা"""
-    print(f"📖 Loading: {filepath}")
     if os.path.exists(filepath):
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                print(f"✅ Loaded successfully: {filepath}")
                 return data
         except Exception as e:
-            print(f"❌ Error loading {filepath}: {e}")
+            print(f"Error loading {filepath}: {e}")
             return default
-    else:
-        print(f"⚠️ File not found: {filepath}, creating default")
-        save_json(filepath, default)
-        return default
+    return default
 
 def save_json(filepath, data):
-    """JSON ফাইল সেভ করা"""
     try:
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
-        print(f"✅ Saved to: {filepath}")
         return True
     except Exception as e:
-        print(f"❌ Error saving {filepath}: {e}")
+        print(f"Error saving {filepath}: {e}")
         return False
 
 def load_vip(): 
@@ -146,7 +252,7 @@ def load_auto_db():
     
     data = load_json(AUTO_DB_FILE, default)
     
-    # Ensure all required keys exist
+    # Fix data structure if needed
     if 'stats' not in data:
         data['stats'] = default['stats']
     if 'tasks' not in data:
@@ -157,6 +263,13 @@ def load_auto_db():
         data['time'] = "08:57 AM"
     if 'last_run' not in data:
         data['last_run'] = ""
+    
+    # Recalculate stats based on actual tasks
+    if data['tasks']:
+        count_20 = sum(1 for t in data['tasks'].values() if t.get('package') == 20)
+        count_30 = sum(1 for t in data['tasks'].values() if t.get('package') == 30)
+        data['stats']['total_20_tasks'] = count_20
+        data['stats']['total_30_tasks'] = count_30
     
     return data
 
@@ -172,7 +285,6 @@ def save_remain(remain_value):
 
 bot_remain = load_remain()
 
-# Required Chats
 REQUIRED_CHATS = [
     {"id": -1003880872686, "url": "https://t.me/Syreo_212", "name": "SYREO CENTER"},
 ]
@@ -231,8 +343,48 @@ def info_ui(title, message):
     return f"╭━〔 ℹ️ **{title}** 〕━⬣\n┃ 💠 {message}\n╰━━━━━━━━━━━━━━━━━━⬣"
 
 # ==========================================
-# ADMIN COMMANDS
+# COMMANDS
 # ==========================================
+@bot.message_handler(commands=['start', 'help'])
+def send_help(message):
+    help_text = """🤖 **Bot Commands:**
+
+📌 **Like Commands:**
+`/like {region} {uid}` - Send 20 likes
+`/like30 {region} {uid}` - Send 30 likes
+
+🔧 **Admin Commands:**
+`/likeauto {region} {uid} {20/30} {days}` - Add auto task
+`/listauto` - List all auto tasks
+`/autoremove {serial}` - Remove auto task
+`/checkdb` - Check database status
+`/fixdb` - Fix and recover database
+`/limit {number}` - Set user daily limit
+`/remains` - Check your remaining limit
+
+📊 **Info:**
+`/admin list` - List all admins
+
+Example: `/like BD 1234567890`"""
+    bot.reply_to(message, help_text, parse_mode="Markdown")
+
+@bot.message_handler(commands=['fixdb'])
+def handle_fixdb(message):
+    if not admin_full_control(message.from_user.id):
+        bot.reply_to(message, "❌ Admin only!", parse_mode="Markdown")
+        return
+    
+    bot.reply_to(message, "🔧 **Fixing database...**", parse_mode="Markdown")
+    
+    # Run database fix
+    fixed_db = fix_and_load_database()
+    tasks_count = len(fixed_db.get('tasks', {}))
+    
+    if tasks_count > 0:
+        bot.reply_to(message, f"✅ **Database Fixed!**\n\nRecovered {tasks_count} tasks.\nUse `/listauto` to see them.", parse_mode="Markdown")
+    else:
+        bot.reply_to(message, "⚠️ **No tasks found to recover.**\n\nPlease add tasks manually using:\n`/likeauto BD UID 20 7`", parse_mode="Markdown")
+
 @bot.message_handler(commands=['admin'])
 def handle_admin_command(message):
     if not is_admin(message.from_user.id):
@@ -316,9 +468,6 @@ def handle_admin_commands(message):
         user_usage.clear()
         bot.reply_to(message, "✅ Global limits reset", parse_mode="Markdown")
 
-# ==========================================
-# LIKE COMMANDS
-# ==========================================
 @bot.message_handler(commands=['like', 'like30'])
 def handle_like(message):
     global bot_remain, user_usage
@@ -406,9 +555,6 @@ def process_like_request(message, region, uid, user_id, user_name, likes_count=2
         print(f"Error: {e}")
         bot.edit_message_text(chat_id=message.chat.id, message_id=wait_msg.message_id, text=error_ui("ERROR", str(e)), parse_mode="Markdown")
 
-# ==========================================
-# AUTO TASK COMMANDS
-# ==========================================
 @bot.message_handler(commands=['likeauto'])
 def handle_likeauto(message):
     if not admin_full_control(message.from_user.id): 
@@ -471,9 +617,6 @@ def handle_likeauto(message):
 🎯 Total: {total_likes} Likes
 
 📊 Total Tasks: {len(db['tasks'])}""", parse_mode="Markdown")
-        
-        # Debug: Show current tasks
-        print(f"📊 Current tasks after add: {list(db['tasks'].keys())}")
     else:
         bot.reply_to(message, "❌ Failed to save task!", parse_mode="Markdown")
 
@@ -485,10 +628,8 @@ def handle_listauto(message):
     db = load_auto_db()
     tasks = db.get('tasks', {})
     
-    print(f"📊 Listauto called - Tasks found: {len(tasks)}")  # Debug
-    
     if not tasks:
-        bot.reply_to(message, "📭 **No auto tasks found!**\n\nUse `/likeauto` to add tasks.", parse_mode="Markdown")
+        bot.reply_to(message, "📭 **No auto tasks found!**\n\nUse `/likeauto` to add tasks.\nOr use `/fixdb` to recover old tasks.", parse_mode="Markdown")
         return
     
     msg = f"📊 **AUTO TASKS** ({len(tasks)} active)\n━━━━━━━━━━━━━━━━━━━━━━━\n\n"
@@ -523,7 +664,6 @@ def handle_autoremove(message):
     
     if serial in db['tasks']:
         task = db['tasks'][serial]
-        # Update stats
         if task['package'] == 20:
             db['stats']['total_20_tasks'] = max(0, db['stats'].get('total_20_tasks', 0) - 1)
         else:
@@ -552,7 +692,6 @@ def handle_autotime(message):
 
 @bot.message_handler(commands=['checkdb'])
 def handle_checkdb(message):
-    """Database চেক করার জন্য ডিবাগ কমান্ড"""
     if not admin_full_control(message.from_user.id):
         return
     
@@ -594,37 +733,6 @@ def handle_remains(message):
 ╰━━━━━━━━━━━━━━━━━━⬣"""
     bot.reply_to(message, text, parse_mode="Markdown")
 
-@bot.message_handler(commands=['vipadd', 'removevip', 'viplist'])
-def handle_vip(message):
-    if not admin_full_control(message.from_user.id):
-        return
-    
-    cmd = message.text.split()[0].lower()
-    args = message.text.split()
-    
-    if cmd == '/vipadd' and len(args) == 3:
-        vips = load_vip()
-        vips[args[1]] = {"limit": int(args[2])}
-        save_vip(vips)
-        bot.reply_to(message, f"✅ VIP Added: {args[1]} (Limit: {args[2]})")
-    
-    elif cmd == '/removevip' and len(args) == 2:
-        vips = load_vip()
-        if args[1] in vips:
-            del vips[args[1]]
-            save_vip(vips)
-            bot.reply_to(message, "✅ VIP Removed!")
-    
-    elif cmd == '/viplist':
-        vips = load_vip()
-        if not vips:
-            bot.reply_to(message, "No VIP users.")
-            return
-        text = "VIP LIST:\n"
-        for uid, data in vips.items():
-            text += f"• {uid} - Limit: {data['limit']}\n"
-        bot.reply_to(message, text)
-
 # ==========================================
 # AUTO TASK EXECUTOR
 # ==========================================
@@ -633,7 +741,6 @@ auto_task_running = False
 def execute_auto_tasks():
     global auto_task_running
     if auto_task_running:
-        print("⏸️ Task already running...")
         return
     
     auto_task_running = True
@@ -643,15 +750,10 @@ def execute_auto_tasks():
     tasks = db.get('tasks', {})
     
     if not tasks:
-        print("📭 No auto tasks found")
         auto_task_running = False
         return
     
-    print(f"🚀 Executing {len(tasks)} tasks...")
-    
     for serial, task in list(tasks.items()):
-        print(f"📌 Processing Task {serial}: {task['uid']}")
-        
         if task['package'] == 20:
             url = f"{API_20_URL}/like?uid={task['uid']}&server_name={task['region'].lower()}&key={API_20_KEY}"
         else:
@@ -669,7 +771,6 @@ def execute_auto_tasks():
                 
                 msg = f"✅ Auto Task {serial}\nUID: {task['uid']}\nSent: {added} likes\nTotal: {task['sent']}/{task['total_target']}"
                 bot.send_message(task['chat_id'], msg)
-                print(f"✅ Task {serial}: +{added} likes")
             
             save_auto_db(db)
             
@@ -683,10 +784,9 @@ def execute_auto_tasks():
             time.sleep(3)
             
         except Exception as e:
-            print(f"❌ Task {serial} error: {e}")
+            print(f"Task {serial} error: {e}")
     
     auto_task_running = False
-    print("✅ Auto task execution completed")
 
 def cron_worker():
     print("⏳ Cron worker started...")
@@ -720,32 +820,32 @@ if __name__ == "__main__":
     print("🚀 Bot starting on Railway...")
     print(f"📂 Data directory: {DATA_DIR}")
     
-    # Check existing files
-    files = ['remain_syreo.json', 'group_ids.json', 'vip.json', 'auto_likes.json', 'admin_ids.json']
-    for f in files:
-        path = os.path.join(DATA_DIR, f)
-        if os.path.exists(path):
-            size = os.path.getsize(path)
-            print(f"✅ Found: {f} ({size} bytes)")
-        else:
-            print(f"⚠️ Missing: {f}")
-    
-    # Load and show existing tasks
-    db = load_auto_db()
-    tasks_count = len(db.get('tasks', {}))
-    print(f"📊 Loaded {tasks_count} auto tasks from database")
+    # Try to fix and recover database on startup
+    print("\n🔧 Running database recovery...")
+    fixed_db = fix_and_load_database()
+    tasks_count = len(fixed_db.get('tasks', {}))
     
     if tasks_count > 0:
-        for serial, task in db['tasks'].items():
-            print(f"   - Task {serial}: {task['uid']} ({task['package']} likes) - Sent: {task['sent']}/{task['total_target']}")
+        print(f"\n✅ Successfully loaded {tasks_count} tasks!")
+        for serial, task in fixed_db['tasks'].items():
+            print(f"   🎓 {serial}: {task['uid']} - {task['package']} likes")
+    else:
+        print("\n⚠️ No tasks found. Use /likeauto to add tasks.")
+    
+    print("\n" + "="*50)
+    print("🤖 Bot is ready!")
+    print("Commands:")
+    print("  /likeauto - Add auto task")
+    print("  /listauto - List tasks")
+    print("  /fixdb - Fix database")
+    print("  /checkdb - Check status")
+    print("="*50)
     
     # Start cron thread
     cron_thread = threading.Thread(target=cron_worker, daemon=True)
     cron_thread.start()
-    print("⏰ Cron worker started")
     
     # Start bot
-    print("🤖 Bot polling started...")
     while True:
         try:
             bot.polling(none_stop=True, timeout=60)
