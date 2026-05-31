@@ -12,7 +12,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 # ==========================================
 # ⚙️ SECURE BOT CONFIGURATION
 # ==========================================
-TOKEN = '8926868360:AAGb9kvjfxrdbritVWvYTC7m751lKU6Hg0c'  # Replace with your Token
+TOKEN = '8926868360:AAGb9kvxxrdbritVWvYTC7m751lKU6Hg0c'  # Replace with your Token
 
 # 🌐 20 LIKES API CONFIG (Sends 20 likes)
 API_20_URL = 'https://riyad-like-api-ob-52.vercel.app'
