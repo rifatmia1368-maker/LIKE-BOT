@@ -144,24 +144,6 @@ def is_group_allowed(chat_id):
     return False
 
 # ==========================================
-# 📢 MUST-JOIN CONFIGURATION
-# ==========================================
-REQUIRED_CHATS = [
-    {"id": -1003880872686, "url": "https://t.me/Syreo_212", "name": "SYREO CENTER"},
-]
-
-def get_missing_chats(user_id):
-    if is_admin(user_id): return []
-    missing = []
-    for chat in REQUIRED_CHATS:
-        try:
-            member = bot.get_chat_member(chat['id'], user_id)
-            if member.status in ['left', 'kicked']: missing.append(chat)
-        except Exception:
-            missing.append(chat)
-    return missing
-
-# ==========================================
 # 🎨 UI TEMPLATES
 # ==========================================
 def report_ui(data, region, status, response_time, remain_requests, likes_sent):
