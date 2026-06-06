@@ -486,7 +486,8 @@ def process_like_request(message, region, uid, user_id, user_name, likes_count=5
         # Fixed URL format for 50 likes API
         url = f"{api_endpoint}?api_key={api_key}&server_name={region.lower()}&uid={uid}"
         
-        response = requests.get(url, timeout=15) 
+        # INCREASED TIMEOUT FROM 15 TO 45 SECONDS
+        response = requests.get(url, timeout=45) 
         data = response.json()
         
         response_time = round(time.time() - start_time, 2)
@@ -509,9 +510,15 @@ def process_like_request(message, region, uid, user_id, user_name, likes_count=5
         else:
             bot.edit_message_text(chat_id=message.chat.id, message_id=wait_msg.message_id, text=error_ui("ERROR", "Service is temporarily unavailable."), parse_mode="Markdown")
 
+    except requests.exceptions.Timeout:
+        print(f"Timeout error for UID: {uid}")
+        bot.edit_message_text(chat_id=message.chat.id, message_id=wait_msg.message_id, text=error_ui("TIMEOUT", "Server is taking too long. Please try again later."), parse_mode="Markdown")
+    except requests.exceptions.ConnectionError:
+        print(f"Connection error for UID: {uid}")
+        bot.edit_message_text(chat_id=message.chat.id, message_id=wait_msg.message_id, text=error_ui("CONNECTION ERROR", "Cannot connect to server. Please check your internet."), parse_mode="Markdown")
     except Exception as e:
         print(f"Error: {e}")
-        bot.edit_message_text(chat_id=message.chat.id, message_id=wait_msg.message_id, text=error_ui("TIMEOUT", "Server is busy. Try again later."), parse_mode="Markdown")
+        bot.edit_message_text(chat_id=message.chat.id, message_id=wait_msg.message_id, text=error_ui("ERROR", f"An error occurred: {str(e)[:50]}"), parse_mode="Markdown")
 
 # ==========================================
 # 🚀 AUTO-TASK COMMANDS (20 and 50 Likes Package)
@@ -860,7 +867,8 @@ def execute_auto_tasks():
         
         start_time = time.time()
         try:
-            response = requests.get(url, timeout=15)
+            # INCREASED TIMEOUT FROM 15 TO 45 SECONDS FOR AUTO TASKS
+            response = requests.get(url, timeout=45)
             res_data = response.json()
             response_time = round(time.time() - start_time, 2)
             
@@ -889,15 +897,21 @@ def execute_auto_tasks():
                 bot.send_message(chat_id, msg_text, parse_mode="HTML")
                 print(f"⚠️ Task {serial} FAILED: Status {status}")
                 
+        except requests.exceptions.Timeout:
+            print(f"❌ Task {serial} TIMEOUT: API took too long")
+            bot.send_message(chat_id, f"⚠️ Auto Task Timeout for Task No: {serial}\nThe server is taking too long to respond. Will retry next time.", parse_mode="HTML")
+        except requests.exceptions.ConnectionError:
+            print(f"❌ Task {serial} CONNECTION ERROR")
+            bot.send_message(chat_id, f"⚠️ Connection Error for Task No: {serial}\nCannot connect to the API server.", parse_mode="HTML")
         except Exception as e:
             print(f"❌ Task {serial} ERROR: {e}")
-            bot.send_message(chat_id, f"⚠️ Auto Task Failed for Task No: {serial} (Timeout/Error).")
+            bot.send_message(chat_id, f"⚠️ Auto Task Failed for Task No: {serial} (Error: {str(e)[:50]}).", parse_mode="HTML")
 
         # Save progress after each task
         save_auto_db(db)
         
         # Check if task is completed
-        if task['remain'] <= 0:
+        if task.get('remain', 0) <= 0:
             task['days_completed'] = task['days']
             bot.send_message(chat_id, f"✅ <b>Task {serial} Completed!</b> Target likes reached. Removed from DB.", parse_mode="HTML")
             # Remove completed task
@@ -911,7 +925,7 @@ def execute_auto_tasks():
                 del db['tasks'][serial]
                 save_auto_db(db)
         
-        time.sleep(5)  # Delay between tasks to avoid rate limits
+        time.sleep(10)  # INCREASED DELAY from 5 to 10 seconds between tasks to avoid rate limits
 
 def cron_worker():
     """Persistent cron worker that survives bot restarts"""
