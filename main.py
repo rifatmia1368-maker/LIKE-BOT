@@ -12,8 +12,6 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 # ==========================================
 # ⚙️ SECURE BOT CONFIGURATION
 # ==========================================
-import os
-
 TOKEN = os.environ.get('BOT_TOKEN')
 if not TOKEN:
     TOKEN = '8535435533:AAFE5dytFA45Ilk-a1c5wGZY5HxwvqPd9dE'  # আপনার টোকেন
@@ -23,7 +21,7 @@ API_20_URL = 'https://riyad-like-api-ob-52.vercel.app'
 API_20_KEY = 'RIYADAH' 
 
 # 🌐 50 LIKES API CONFIG (Sends 50 likes)
-API_50_URL = 'https://92.118.206.4:30026'
+API_50_URL = 'http://92.118.206.4:30026'
 API_50_KEY = 'SAIFUL'
 
 # 👑 Admin Settings
@@ -57,9 +55,10 @@ REMAIN_FILE = 'remain_syreo.json'
 GROUPS_FILE = 'group_ids.json'
 VIP_FILE = 'vip.json'
 AUTO_DB_FILE = 'auto_likes.json'
+GROUP_STATUS_FILE = 'group_status.json'  # New: Track per-group bot status
 
 # Global State Variables
-bot_is_on = True
+bot_is_on = True  # Global default (will be overridden by group-specific status)
 USER_LIMIT = 1  # Default limit for normal users
 user_usage = {}
 pending_requests = {}
@@ -122,6 +121,34 @@ def load_auto_db():
 
 def save_auto_db(data): 
     save_json(AUTO_DB_FILE, data)
+
+def load_group_status():
+    """Load per-group bot status"""
+    return load_json(GROUP_STATUS_FILE, {})
+
+def save_group_status(data):
+    save_json(GROUP_STATUS_FILE, data)
+
+def get_group_status(chat_id):
+    """Get bot status for a specific group"""
+    group_status = load_group_status()
+    chat_id_str = str(chat_id)
+    # Default is True (ON) if not explicitly turned off
+    return group_status.get(chat_id_str, True)
+
+def set_group_status(chat_id, status):
+    """Set bot status for a specific group"""
+    group_status = load_group_status()
+    chat_id_str = str(chat_id)
+    group_status[chat_id_str] = status
+    save_group_status(group_status)
+
+def is_bot_on_for_chat(chat_id):
+    """Check if bot is ON for a specific chat/group"""
+    if chat_id > 0:  # Private chat - always check global status
+        return bot_is_on
+    else:  # Group chat - check group-specific status
+        return get_group_status(chat_id)
 
 def load_remain():
     data = load_json(REMAIN_FILE, {})
@@ -334,20 +361,34 @@ def handle_limit_command(message):
         bot.reply_to(message, "❌ Please provide a valid number!", parse_mode="Markdown")
 
 # ==========================================
-# 🤖 BOT COMMANDS
+# 🤖 BOT COMMANDS (Group-Specific ON/OFF)
 # ==========================================
 @bot.message_handler(commands=['p0', 'p02', 'remainreset', 'y5', 'y6'])
 def handle_admin_commands(message):
     global bot_is_on, bot_remain, user_usage
-    if not admin_full_control(message.from_user.id): return 
-    command = message.text.split()[0].lower()
+    if not admin_full_control(message.from_user.id): 
+        return
     
-    if command in ['/p0', '/y1']:
-        bot_is_on = True
-        bot.reply_to(message, info_ui("SYSTEM ALIVE", "Bot has been turned **ON**."), parse_mode="Markdown")
-    elif command in ['/p02', '/y0']:
-        bot_is_on = False
-        bot.reply_to(message, info_ui("SYSTEM SLEEP", "Bot has been turned **OFF**."), parse_mode="Markdown")
+    command = message.text.split()[0].lower()
+    chat_id = message.chat.id
+    
+    # Group-specific ON/OFF
+    if command == '/p0':
+        if chat_id < 0:  # It's a group
+            set_group_status(chat_id, True)
+            bot.reply_to(message, info_ui("GROUP BOT ON", "Bot has been turned **ON** for this group only. Other groups are unaffected."), parse_mode="Markdown")
+        else:  # Private chat
+            bot_is_on = True
+            bot.reply_to(message, info_ui("SYSTEM ALIVE", "Bot has been turned **ON** globally."), parse_mode="Markdown")
+    
+    elif command == '/p02':
+        if chat_id < 0:  # It's a group
+            set_group_status(chat_id, False)
+            bot.reply_to(message, info_ui("GROUP BOT OFF", "Bot has been turned **OFF** for this group only. Other groups are unaffected."), parse_mode="Markdown")
+        else:  # Private chat
+            bot_is_on = False
+            bot.reply_to(message, info_ui("SYSTEM SLEEP", "Bot has been turned **OFF** globally."), parse_mode="Markdown")
+    
     elif command == '/remainreset':
         bot_remain = 15
         save_remain(bot_remain)
@@ -358,22 +399,26 @@ def freeon_worker(chat_id, seconds):
     global bot_is_on
     bot_is_on = True
     for i in range(1, seconds + 1):
-        try: bot.send_message(chat_id, str(i))
-        except: pass
+        try: 
+            bot.send_message(chat_id, str(i))
+        except: 
+            pass
         time.sleep(1)
     bot_is_on = False
     bot.send_message(chat_id, "🛑 **bot is off now**", parse_mode="Markdown")
 
 @bot.message_handler(commands=['freeon'])
 def handle_freeon(message):
-    if not admin_full_control(message.from_user.id): return
+    if not admin_full_control(message.from_user.id): 
+        return
     args = message.text.split()
     if len(args) != 2:
         bot.reply_to(message, "⚠️ **Usage:** `/freeon <seconds>`", parse_mode="Markdown")
         return
     try:
         seconds = int(args[1])
-        if seconds <= 0 or seconds > 120: return bot.reply_to(message, "❌ 1-120 seconds only.")
+        if seconds <= 0 or seconds > 120: 
+            return bot.reply_to(message, "❌ 1-120 seconds only.")
     except:
         return bot.reply_to(message, "❌ Seconds must be a number.")
     bot.reply_to(message, f"✅ Bot is temporarily ON for {seconds} seconds.")
@@ -388,11 +433,15 @@ def handle_like(message):
 
     user_id = message.from_user.id
     user_name = message.from_user.first_name
+    chat_id = message.chat.id
     vips = load_vip()
     is_vip = str(user_id) in vips
 
+    # Check if bot is ON for this specific chat/group
     if not is_admin(user_id):
-        if not bot_is_on: return
+        if not is_bot_on_for_chat(chat_id): 
+            bot.reply_to(message, error_ui("BOT OFFLINE", "Bot is currently turned OFF for this group."), parse_mode="Markdown")
+            return
 
     if not is_admin(user_id):
         if is_vip:
@@ -434,7 +483,7 @@ def process_like_request(message, region, uid, user_id, user_name, likes_count=5
 
     try:
         start_time = time.time() 
-        # Format URL for 50 likes API
+        # Fixed URL format for 50 likes API
         url = f"{api_endpoint}?api_key={api_key}&server_name={region.lower()}&uid={uid}"
         
         response = requests.get(url, timeout=15) 
@@ -469,7 +518,8 @@ def process_like_request(message, region, uid, user_id, user_name, likes_count=5
 # ==========================================
 @bot.message_handler(commands=['autotime'])
 def handle_autotime(message):
-    if not admin_full_control(message.from_user.id): return
+    if not admin_full_control(message.from_user.id): 
+        return
     args = message.text.split(maxsplit=1)
     if len(args) != 2:
         bot.reply_to(message, "⚠️ **Usage:** `/autotime HH:MM AM/PM`\nExample: `/autotime 04:30 AM`", parse_mode="Markdown")
@@ -483,9 +533,10 @@ def handle_autotime(message):
 
 @bot.message_handler(commands=['likeauto'])
 def handle_likeauto(message):
-    if not admin_full_control(message.from_user.id): return
+    if not admin_full_control(message.from_user.id): 
+        return
     args = message.text.split()
-    if len(args) != 4:
+    if len(args) != 5:
         bot.reply_to(message, "⚠️ **Usage:** `/likeauto {region} {uid} {20/50} {days}`\nExample: `/likeauto BD 123456 20 7` or `/likeauto BD 123456 50 5`", parse_mode="Markdown")
         return
 
@@ -512,9 +563,9 @@ def handle_likeauto(message):
     
     # Update package-wise stats
     if package == 20:
-        db['stats']['total_20_tasks'] += 1
+        db['stats']['total_20_tasks'] = db['stats'].get('total_20_tasks', 0) + 1
     else:
-        db['stats']['total_50_tasks'] += 1
+        db['stats']['total_50_tasks'] = db['stats'].get('total_50_tasks', 0) + 1
 
     db['tasks'][serial_num] = {
         "chat_id": message.chat.id,
@@ -542,14 +593,15 @@ def handle_likeauto(message):
 🎯 Total Likes: `{total_likes}`
 
 📊 Package Statistics:
-├─ 20 Likes Tasks: `{db['stats']['total_20_tasks']}`
-├─ 50 Likes Tasks: `{db['stats']['total_50_tasks']}`
+├─ 20 Likes Tasks: `{db['stats'].get('total_20_tasks', 0)}`
+├─ 50 Likes Tasks: `{db['stats'].get('total_50_tasks', 0)}`
 ├─ Total 20 Likes Sent: `{db['stats'].get('total_20_likes_sent', 0)}`
 └─ Total 50 Likes Sent: `{db['stats'].get('total_50_likes_sent', 0)}`""", parse_mode="Markdown")
 
 @bot.message_handler(commands=['autoremove'])
 def handle_autoremove(message):
-    if not admin_full_control(message.from_user.id): return
+    if not admin_full_control(message.from_user.id): 
+        return
     args = message.text.split()
     if len(args) != 2:
         bot.reply_to(message, "⚠️ **Usage:** `/autoremove {uid}`\nExample: `/autoremove 1234567890`\nOr use: `/autoremove task_{serial}`", parse_mode="Markdown")
@@ -603,7 +655,8 @@ def handle_autoremove(message):
 
 @bot.message_handler(commands=['listauto'])
 def handle_listauto(message):
-    if not admin_full_control(message.from_user.id): return
+    if not admin_full_control(message.from_user.id): 
+        return
     db = load_auto_db()
     tasks = db.get('tasks', {})
     stats = db.get('stats', {"total_20_tasks": 0, "total_50_tasks": 0, "total_20_likes_sent": 0, "total_50_likes_sent": 0})
@@ -674,7 +727,8 @@ def handle_listauto(message):
 @bot.message_handler(commands=['autostats'])
 def handle_autostats(message):
     """Show detailed statistics about auto tasks"""
-    if not admin_full_control(message.from_user.id): return
+    if not admin_full_control(message.from_user.id): 
+        return
     db = load_auto_db()
     stats = db.get('stats', {})
     tasks = db.get('tasks', {})
@@ -708,17 +762,24 @@ def handle_autostats(message):
 def handle_vip_group_commands(message):
     cmd = message.text.split()[0].lower()
     user_id = message.from_user.id
+    chat_id = message.chat.id
     
     if cmd == '/remains':
-        if not bot_is_on: return
+        if not is_bot_on_for_chat(chat_id): 
+            bot.reply_to(message, error_ui("BOT OFFLINE", "Bot is currently turned OFF for this group."), parse_mode="Markdown")
+            return
         vips = load_vip()
-        if is_admin(user_id): uses_left = "♾️ Unlimited (Admin)"
-        elif str(user_id) in vips: uses_left = f"{vips[str(user_id)]['limit'] - user_usage.get(user_id, 0)}/{vips[str(user_id)]['limit']} (VIP)"
-        else: uses_left = f"{USER_LIMIT - user_usage.get(user_id, 0)}/{USER_LIMIT}"
+        if is_admin(user_id): 
+            uses_left = "♾️ Unlimited (Admin)"
+        elif str(user_id) in vips: 
+            uses_left = f"{vips[str(user_id)]['limit'] - user_usage.get(user_id, 0)}/{vips[str(user_id)]['limit']} (VIP)"
+        else: 
+            uses_left = f"{USER_LIMIT - user_usage.get(user_id, 0)}/{USER_LIMIT}"
         text = f"╭━〔 🌐 **𝗦𝗬𝗦𝗧𝗘𝗠 𝗥𝗘𝗠𝗔𝗜𝗡𝗦** 〕━⬣\n┃ 🤖 **𝗚𝗹𝗼𝗯𝗮𝗹 𝗕𝗼𝘁:** `{bot_remain}/15`\n┃ 👤 **𝗬𝗼𝘂𝗿 𝗟𝗶𝗺𝗶𝘁:** `{uses_left}`\n╰━━━━━━━━━━━━━━━━━━⬣"
         return bot.reply_to(message, text, parse_mode="Markdown")
 
-    if not admin_full_control(user_id): return
+    if not admin_full_control(user_id): 
+        return
     args = message.text.split()
 
     if cmd == '/vipadd' and len(args) == 3:
@@ -728,11 +789,15 @@ def handle_vip_group_commands(message):
         bot.reply_to(message, f"✅ VIP Added: {args[1]} (Limit: {args[2]})")
     elif cmd == '/removevip' and len(args) == 2:
         vips = load_vip()
-        if args[1] in vips: del vips[args[1]]; save_vip(vips); bot.reply_to(message, "🚫 VIP Removed.")
-    elif cmd == '/viplist':
+        if args[1] in vips: 
+            del vips[args[1]]
+            save_vip(vips)
+            bot.reply_to(message, "🚫 VIP Removed.")
+    elif cmd == '/listvip' or cmd == '/viplist':
         vips = load_vip()
         text = "╭━〔 🌟 **𝗩𝗜𝗣 𝗟𝗜𝗦𝗧** 〕━⬣\n"
-        for uid, data in vips.items(): text += f"┃ 👤 ID: `{uid}` - Limit: `{data['limit']}`\n"
+        for uid, data in vips.items(): 
+            text += f"┃ 👤 ID: `{uid}` - Limit: `{data['limit']}`\n"
         text += "╰━━━━━━━━━━━━━━━━━━⬣"
         bot.reply_to(message, text, parse_mode="Markdown")
     elif cmd == '/allow' and len(args) == 2:
@@ -745,7 +810,8 @@ def handle_vip_group_commands(message):
             try:
                 val, unit = int(dur[:-1]), dur[-1]
                 mult = {'d': 86400, 'm': 2592000, 'y': 31536000}.get(unit, 0)
-                if not mult: raise ValueError
+                if not mult: 
+                    raise ValueError
                 groups[chat_id_str] = time.time() + (val * mult)
             except: 
                 return bot.reply_to(message, "❌ Invalid format. Use: `/allow 7d` or `/allow unlimited`", parse_mode="Markdown")
@@ -789,6 +855,7 @@ def execute_auto_tasks():
         else:  # package == 50
             base_api = API_50_URL
             api_key = API_50_KEY
+            # Fixed URL format for 50 likes API
             url = f"{base_api}/like?api_key={api_key}&server_name={region.lower()}&uid={uid}"
         
         start_time = time.time()
@@ -884,6 +951,9 @@ if __name__ == "__main__":
     print("   - /admin remove <user_id> - Remove admin")
     print("   - /admin list - List all admins")
     print("   - /limit <number> - Set user daily limit")
+    print("📌 Group Control Commands:")
+    print("   - /p0 - Turn ON bot (group-specific)")
+    print("   - /p02 - Turn OFF bot (group-specific)")
     print("📌 Auto-Like Commands (20 and 50 Likes Package):")
     print("   - /likeauto {region} {uid} {20/50} {days} - Add auto task")
     print("   - /listauto - List all auto tasks (grouped by package)")
@@ -891,7 +961,6 @@ if __name__ == "__main__":
     print("   - /autostats - Show package-wise statistics")
     print("   - /autotime HH:MM AM/PM - Set execution time")
     print("📌 Other Commands:")
-    print("   - /p0 (Turn ON) | /p02 (Turn OFF)")
     print("   - /freeon (Temporary ON)")
     print("   - /vipadd (Add VIP)")
     print("   - /like (50 Likes) - Uses 50 likes API")
