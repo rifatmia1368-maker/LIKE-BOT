@@ -24,6 +24,12 @@ API_20_KEY = 'RIYADAH'
 API_50_URL = 'http://92.118.206.4:30026'
 API_50_KEY = 'SAIFUL'
 
+# 🔗 FORCE JOIN CHANNELS
+FORCE_CHANNELS = [
+    {"username": "@riyadautolikegroup", "link": "https://t.me/riyadautolikegroup", "name": "Riyad Auto Like Group"},
+    {"username": "@riyadalhasanbackupchanel", "link": "https://t.me/riyadalhasanbackupchanel", "name": "Riyad Al Hasan Backup Channel"}
+]
+
 # 👑 Admin Settings
 ADMIN_IDS_FILE = 'admin_ids.json'
 DEFAULT_ADMINS = [7603719412]  # Default admin IDs (Integers)
@@ -63,6 +69,61 @@ bot_is_on = True
 USER_LIMIT = 1  # Default limit for normal users
 user_usage = {}
 pending_requests = {}
+
+# ==========================================
+# 🔗 FORCE JOIN CHECKER
+# ==========================================
+def check_force_join(user_id):
+    """Check if user has joined all required channels"""
+    not_joined = []
+    for channel in FORCE_CHANNELS:
+        try:
+            member = bot.get_chat_member(channel['username'], user_id)
+            if member.status in ['left', 'kicked']:
+                not_joined.append(channel)
+        except:
+            not_joined.append(channel)
+    return not_joined
+
+def force_join_keyboard(not_joined):
+    """Generate inline keyboard for joining channels"""
+    markup = InlineKeyboardMarkup(row_width=1)
+    for channel in not_joined:
+        markup.add(InlineKeyboardButton(f"📢 Join {channel['name']}", url=channel['link']))
+    markup.add(InlineKeyboardButton("🔄 Try Again", callback_data="check_join"))
+    return markup
+
+# ==========================================
+# 🔄 CALLBACK FOR CHECK JOIN
+# ==========================================
+@bot.callback_query_handler(func=lambda call: call.data == "check_join")
+def callback_check_join(call):
+    user_id = call.from_user.id
+    not_joined = check_force_join(user_id)
+    
+    if not not_joined:
+        bot.answer_callback_query(call.id, "✅ Verification Successful! You can now use the bot.")
+        bot.edit_message_text(
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            text="<b>✅ Verification Successful!</b>\n\nYou have joined all required channels. You can now use the bot commands.",
+            parse_mode="HTML"
+        )
+    else:
+        bot.answer_callback_query(call.id, "❌ You still haven't joined all channels!")
+        channels_text = "\n".join([f"├─ {ch['name']}" for ch in not_joined])
+        bot.edit_message_text(
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            text=f"""<b>⚠️ ACCESS DENIED!</b>
+
+<b>❌ You haven't joined:</b>
+{channels_text}
+
+<i>Please join all channels and click Try Again.</i>""",
+            parse_mode="HTML",
+            reply_markup=force_join_keyboard(not_joined)
+        )
 
 # ==========================================
 # 🛡️ ADMIN CHECKER & FULL CONTROL
@@ -495,7 +556,7 @@ def handle_admin_commands(message):
         bot.reply_to(message, info_ui("USER LIMITS RESET", "All user daily limits have been reset."), parse_mode="Markdown")
 
 # ==========================================
-# 🎯 50 LIKES COMMAND (Uses 50 likes API)
+# 🎯 50 LIKES COMMAND (Uses 50 likes API) - WITH FORCE JOIN
 # ==========================================
 @bot.message_handler(commands=['like'])
 def handle_like(message):
@@ -506,6 +567,32 @@ def handle_like(message):
     chat_id = message.chat.id
     vips = load_vip()
     is_vip = str(user_id) in vips
+
+    # FORCE JOIN CHECK (Admins skip)
+    if not is_admin(user_id):
+        not_joined = check_force_join(user_id)
+        if not_joined:
+            channels_text = "\n".join([f"├─ {ch['name']}" for ch in not_joined])
+            bot.reply_to(
+                message,
+                f"""<b>⚠️ ACCESS DENIED!</b>
+
+<b>👋 Hello {user_name}!</b>
+
+You must join our channels first to use this bot.
+
+<b>📢 Required Channels:</b>
+├─ Riyad Auto Like Group
+├─ Riyad Al Hasan Backup Channel
+
+<b>❌ You haven't joined:</b>
+{channels_text}
+
+<i>Please join all channels and try again.</i>""",
+                parse_mode="HTML",
+                reply_markup=force_join_keyboard(not_joined)
+            )
+            return
 
     # Check if bot is ON for this specific chat/group
     if not is_admin(user_id):
@@ -520,7 +607,6 @@ def handle_like(message):
                 bot.reply_to(message, error_ui("LIMIT REACHED", f"Sorry {user_name}, you have used your VIP daily limit."), parse_mode="Markdown")
                 return
         else:
-            # No global limit check, only user limit
             if user_usage.get(user_id, 0) >= USER_LIMIT:
                 bot.reply_to(message, error_ui("LIMIT REACHED", f"Sorry {user_name}, you have used your daily limit."), parse_mode="Markdown")
                 return
@@ -832,6 +918,25 @@ def handle_vip_group_commands(message):
         if not is_bot_on_for_chat(chat_id): 
             bot.reply_to(message, error_ui("BOT OFFLINE", "Bot is currently turned OFF for this group."), parse_mode="Markdown")
             return
+        
+        # FORCE JOIN CHECK for /remains (non-admins)
+        if not is_admin(user_id):
+            not_joined = check_force_join(user_id)
+            if not_joined:
+                channels_text = "\n".join([f"├─ {ch['name']}" for ch in not_joined])
+                bot.reply_to(
+                    message,
+                    f"""<b>⚠️ ACCESS DENIED!</b>
+
+<b>❌ You haven't joined:</b>
+{channels_text}
+
+<i>Please join all channels and try again.</i>""",
+                    parse_mode="HTML",
+                    reply_markup=force_join_keyboard(not_joined)
+                )
+                return
+        
         vips = load_vip()
         if is_admin(user_id): 
             uses_left = "♾️ Unlimited (Admin)"
@@ -1101,6 +1206,7 @@ if __name__ == "__main__":
     print(f"📌 Total Admins: {len(ADMIN_IDS)}")
     print(f"📌 User Daily Limit: {USER_LIMIT}")
     print(f"📌 Global Limit: DISABLED (Unlimited)")
+    print(f"📌 Force Join: ENABLED (2 Channels)")
     print("📌 Admin Commands:")
     print("   - /admin add <user_id> - Add new admin")
     print("   - /admin remove <user_id> - Remove admin")
