@@ -56,7 +56,7 @@ ADMIN_IDS = load_admin_ids()
 
 bot = telebot.TeleBot(TOKEN)
 
-ALLOWED_REGIONS = ['ME', 'ID', 'TH', 'VN', 'SG', 'BD', 'PK', 'MY', 'PH', 'RU', 'AFR']
+ALLOWED_REGIONS = ['ME', 'ID', 'TH', 'VN', 'SG', 'BD', 'PK', 'MY', 'PH', 'RU', 'AFR', 'IND']
 REMAIN_FILE = 'remain_syreo.json'
 GROUPS_FILE = 'group_ids.json'
 VIP_FILE = 'vip.json'
