@@ -26,7 +26,7 @@ API_50_KEY = 'SAIFUL'
 
 # 🔗 FORCE JOIN CHANNELS
 FORCE_CHANNELS = [
-    {"username": "@riyadautolikegroup", "link": "https://t.me/riyadautolikegroup", "name": "Riyad Auto Like Group"},
+    {"username": "@riyadautolikegroup", "link": "https://t.me/riyadautolikegroup", "name": "Riyad Auto Likes Group"},
     {"username": "@riyadalhasanbackupchanel", "link": "https://t.me/riyadalhasanbackupchanel", "name": "Riyad Al Hasan Backup Channel"}
 ]
 
