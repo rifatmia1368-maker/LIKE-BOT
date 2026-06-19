@@ -14,7 +14,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, MessageEnt
 # ==========================================
 TOKEN = os.environ.get('BOT_TOKEN')
 if not TOKEN:
-    TOKEN = '8535435533:AAFE5dytFA45Ilk-a1c5wGZY5HxwvqPd9dE'
+    TOKEN = '8702944221:AAGBbL8pgfC5GZiFEIrOmCD2DZoXQ37W-r8'
 
 # 🌐 API CONFIG
 API_20_URL = 'https://riyad-like-api-ob-52.vercel.app'
