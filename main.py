@@ -15,6 +15,14 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, MessageEnt
 TOKEN = os.environ.get('BOT_TOKEN')
 if not TOKEN:
     TOKEN = '8535435533:AAFE5dytFA45Ilk-a1c5wGZY5HxwvqPd9dE'
+# আপনার ID লিস্ট থেকে প্রথম কয়েকটা টেস্ট করি
+TEST_IDS = [
+    "6100639476441161711",  # ✅
+    "6102462664288509137",  # ❌
+    "6100199534351097095",  # ⚠️
+    "6336861449360514102",  # success
+    "6337033209397649451",  # error
+]    
 
 # 🌐 20 LIKES API CONFIG
 API_20_URL = 'https://riyad-like-api-ob-52.vercel.app'
@@ -666,6 +674,25 @@ def handle_listauto(message):
         p = int((d['sent']/d['total_target'])*100) if d['total_target'] else 0
         text += f"🎓 {s} | 👤 {d.get('nickname','?')}\n🆔 {d['uid']} | 💳 {d['package']}L\n📊 {d['sent']}/{d['total_target']} ({p}%)\n\n"
     bot.reply_to(message, text)
+    
+@bot.message_handler(commands=['test'])
+def test_emoji(message):
+    for eid in TEST_IDS:
+        try:
+            bot.send_message(
+                message.chat.id,
+                f"Test {eid[:8]}... ✅",
+                entities=[telebot.types.MessageEntity(
+                    type="custom_emoji",
+                    offset=5,
+                    length=1,
+                    custom_emoji_id=eid
+                )]
+            )
+        except Exception as e:
+            bot.send_message(message.chat.id, f"❌ ID {eid[:8]}... Error: {str(e)[:50]}")
+
+bot.polling()
 
 # ==========================================
 # 🎯 VIP
