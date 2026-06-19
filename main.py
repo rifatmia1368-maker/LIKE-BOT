@@ -1,42 +1,95 @@
+#credit @SymoonAi 🐸
 import telebot
-import requests
-import time
+from telebot import types
+from telebot.types import MessageEntity
+import random
+import string
+import emoji
 import json
 import os
-import threading
-import html
-import datetime
-import pytz
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-# ==========================================
-# ⚙️ SECURE BOT CONFIGURATION
-# ==========================================
-TOKEN = os.environ.get('BOT_TOKEN')
-if not TOKEN:
-    TOKEN = '8702944221:AAGBbL8pgfC5GZiFEIrOmCD2DZoXQ37W-r8'
+TOKEN = "8702944221:AAGBbL8pgfC5GZiFEIrOmCD2DZoXQ37W-r8"
+ADMIN_ID = 7603719412
+bot = telebot.TeleBot(TOKEN)
 
-# 🌐 20 LIKES API CONFIG (Sends 20 likes)
-API_20_URL = 'https://riyad-like-api-ob-52.vercel.app'
-API_20_KEY = 'RIYADAH' 
+USERS_FILE = "users.json"
+POSTS_FILE = "posts.json"
 
-# 🌐 50 LIKES API CONFIG (Sends 50 likes)
-API_50_URL = 'http://92.118.206.4:30026'
-API_50_KEY = 'SAIFUL'
+# CUSTOM EMOJI CONFIGURATION
+CUSTOM_EMOJIS = {
+    "make_post":       ("🏣", 6336646834139700626),
+    "connect_channel": ("🤙", None),
+    "send_channel":    ("👏", None),
+    "admin_panel":     ("🛠", None),
+    "success":         ("✅", 6336861449360514102),
+    "error":           ("❌", 6337033209397649451),
+    "broadcast":       ("📢", 6336698133229082903),
+    "status":          ("📊", 6336674562448563935),
+    "welcome":         ("⭐", 6336646834139700626),
+    "bot_active":      ("🚀", 6336674562448563935),
+}
 
-# 🔗 FORCE JOIN CHANNELS
-FORCE_CHANNELS = [
-    {"username": "@riyadautolikegroup", "link": "https://t.me/riyadautolikegroup", "name": "Riyad Auto Likes Group"},
-    {"username": "@riyadalhasanbackupchanel", "link": "https://t.me/riyadalhasanbackupchanel", "name": "Riyad Al Hasan Backup Channel"}
-]
+def get_emoji(key: str) -> str:
+    char, _ = CUSTOM_EMOJIS.get(key, ("❓", None))
+    return char
 
-# 👑 Admin Settings
-ADMIN_IDS_FILE = 'admin_ids.json'
-DEFAULT_ADMINS = [7603719412]
+def get_emoji_entity(key: str, offset: int) -> MessageEntity | None:
+    char, emoji_id = CUSTOM_EMOJIS.get(key, ("❓", None))
+    if emoji_id:
+        return MessageEntity(
+            type="custom_emoji",
+            offset=offset,
+            length=len(char),
+            custom_emoji_id=emoji_id
+        )
+    return None
 
-# ==========================================
-# ✨ PREMIUM ANIMATED EMOJI SYSTEM (REAL IDs)
-# ==========================================
+def make_entities(text, bold=False, emoji_key=None, code_words=None):
+    """
+    text এর জন্য entities তৈরি করে।
+    bold=True → পুরো text bold
+    emoji_key → শুরুতে custom emoji
+    code_words → list of words যেগুলো code format হবে
+    """
+    entities = []
+
+    if emoji_key:
+        ent = get_emoji_entity(emoji_key, 0)
+        if ent:
+            entities.append(ent)
+
+    if bold:
+        entities.append(MessageEntity(
+            type="bold",
+            offset=0,
+            length=len(text)
+        ))
+
+    if code_words:
+        for word in code_words:
+            idx = text.find(str(word))
+            if idx != -1:
+                entities.append(MessageEntity(
+                    type="code",
+                    offset=idx,
+                    length=len(str(word))
+                ))
+
+    return entities if entities else None
+
+# ===========================
+
+if os.path.exists(USERS_FILE):
+    with open(USERS_FILE, "r") as f:
+        registered_users = set(json.load(f))
+else:
+    registered_users = set()
+
+def save_users():
+    with open(USERS_FILE, "w") as f:
+        json.dump(list(registered_users), f)
+
+# Premium Emoji IDs
 PREMIUM_EMOJIS = [
     "6100639476441161711",
     "6102462664288509137",
@@ -188,758 +241,303 @@ PREMIUM_EMOJIS = [
     "6336575056646249129"
 ]
 
-# Emoji Index Mapping
-PE = {
-    "check": 0, "cross": 1, "warning": 2, "info": 3, "fire": 4,
-    "bolt": 5, "rocket": 6, "star": 7, "heart": 8, "blue_heart": 9,
-    "crown": 10, "diamond": 11, "trophy": 12, "target": 13, "chart": 14,
-    "chart_up": 15, "chart_down": 16, "user": 17, "users": 18, "id": 19,
-    "globe": 20, "card": 21, "clock": 22, "calendar": 23, "hourglass": 24,
-    "speaker": 25, "green_circle": 26, "red_circle": 27, "graduate": 28,
-    "pin": 29, "empty": 30, "diamond2": 31, "bot": 32, "key": 33,
-    "save": 34, "mobile": 35, "search": 36, "pause": 37, "play": 38,
-    "ban": 39, "note": 40, "money": 41, "refresh": 42, "heart_fire": 43,
-    "gold": 44, "silver": 45, "bronze": 46
-}
+posts_db = {}
+user_channels = {}
+temp_data = {}
 
-def pe(name):
-    """Premium Animated Emoji"""
-    if name in PE:
-        idx = PE[name]
-        if idx < len(PREMIUM_EMOJIS):
-            emoji_map = {
-                "check": "✅", "cross": "❌", "warning": "⚠️", "info": "ℹ️",
-                "fire": "🔥", "bolt": "⚡", "rocket": "🚀", "star": "⭐",
-                "heart": "❤️", "blue_heart": "💙", "crown": "👑", "diamond": "💎",
-                "trophy": "🏆", "target": "🎯", "chart": "📊", "chart_up": "📈",
-                "chart_down": "📉", "user": "👤", "users": "👥", "id": "🆔",
-                "globe": "🌍", "card": "💳", "clock": "⏰", "calendar": "📅",
-                "hourglass": "⏳", "speaker": "📢", "green_circle": "🟢",
-                "red_circle": "🔴", "graduate": "🎓", "pin": "📌", "empty": "📭",
-                "diamond2": "💠", "bot": "🤖", "key": "🔑", "save": "💾",
-                "mobile": "📱", "search": "🔍", "pause": "⏸️", "play": "▶️",
-                "ban": "🚫", "note": "📝", "money": "💰", "refresh": "🔄",
-                "heart_fire": "❤️‍🔥", "gold": "🥇", "silver": "🥈", "bronze": "🥉"
-            }
-            emoji_char = emoji_map.get(name, name)
-            return f'<emoji id="{PREMIUM_EMOJIS[idx]}">{emoji_char}</emoji>'
-    return name
+# --- UTILS ---
+def generate_id():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
-# Load admin IDs
-def load_admin_ids():
-    if os.path.exists(ADMIN_IDS_FILE):
-        try:
-            with open(ADMIN_IDS_FILE, 'r') as f:
-                data = json.load(f)
-                return data.get('admin_ids', DEFAULT_ADMINS.copy())
-        except Exception:
-            return DEFAULT_ADMINS.copy()
-    return DEFAULT_ADMINS.copy()
+def process_text_and_entities(message):
+    input_text = message.text or message.caption or ""
+    original_entities = message.entities or message.caption_entities or []
+    final_text, new_entities = "", []
+    offset_map = {}
+    current_old_offset, current_new_offset = 0, 0
 
-def save_admin_ids(admin_ids):
-    try:
-        with open(ADMIN_IDS_FILE, 'w') as f:
-            json.dump({'admin_ids': admin_ids}, f, indent=4)
-    except Exception as e:
-        print(f"Error saving admin IDs: {e}")
+    for char in input_text:
+        offset_map[current_old_offset] = current_new_offset
+        if emoji.is_emoji(char):
+            rand_id = random.choice(PREMIUM_EMOJIS)
+            placeholder = "✨"
+            new_entities.append(MessageEntity(
+                type="custom_emoji",
+                offset=current_new_offset,
+                length=len(placeholder),
+                custom_emoji_id=rand_id
+            ))
+            final_text += placeholder
+            char_len = len(char.encode('utf-16-le')) // 2
+            current_old_offset += char_len
+            current_new_offset += len(placeholder)
+        else:
+            final_text += char
+            current_old_offset += 1
+            current_new_offset += 1
 
-ADMIN_IDS = load_admin_ids()
+    offset_map[current_old_offset] = current_new_offset
+    for ent in original_entities:
+        if ent.type == "custom_emoji":
+            continue
+        new_start = offset_map.get(ent.offset)
+        new_end = offset_map.get(ent.offset + ent.length)
+        if new_start is not None and new_end is not None:
+            new_entities.append(MessageEntity(
+                type=ent.type,
+                offset=new_start,
+                length=new_end - new_start,
+                url=ent.url,
+                user=ent.user,
+                language=ent.language,
+                custom_emoji_id=ent.custom_emoji_id
+            ))
+    return final_text, new_entities
 
-bot = telebot.TeleBot(TOKEN)
-
-ALLOWED_REGIONS = ['ME', 'ID', 'TH', 'VN', 'SG', 'BD', 'PK', 'MY', 'PH', 'RU', 'AFR']
-GROUPS_FILE = 'group_ids.json'
-VIP_FILE = 'vip.json'
-AUTO_DB_FILE = 'auto_likes.json'
-GROUP_STATUS_FILE = 'group_status.json'
-ALL_GROUPS_FILE = 'all_groups.json'
-
-# Global State
-bot_is_on = True
-USER_LIMIT = 1
-user_usage = {}
-
-# ==========================================
-# 🔗 FORCE JOIN CHECKER
-# ==========================================
-def check_force_join(user_id):
-    not_joined = []
-    for channel in FORCE_CHANNELS:
-        try:
-            member = bot.get_chat_member(channel['username'], user_id)
-            if member.status in ['left', 'kicked']:
-                not_joined.append(channel)
-        except:
-            not_joined.append(channel)
-    return not_joined
-
-def force_join_keyboard(not_joined):
-    markup = InlineKeyboardMarkup(row_width=1)
-    for channel in not_joined:
-        markup.add(InlineKeyboardButton(f"{pe('speaker')} Join {channel['name']}", url=channel['link']))
-    markup.add(InlineKeyboardButton(f"{pe('refresh')} Try Again", callback_data="check_join"))
+# --- KEYBOARDS ---
+def main_menu(user_id):
+    markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    markup.add(
+        f"MAKE POST {get_emoji('make_post')}",
+        f"CONNECT CHANNELS {get_emoji('connect_channel')}",
+        f"SEND TO CHANNEL {get_emoji('send_channel')}"
+    )
+    if user_id == ADMIN_ID:
+        markup.add(f"ADMIN PANEL {get_emoji('admin_panel')}")
     return markup
 
-@bot.callback_query_handler(func=lambda call: call.data == "check_join")
-def callback_check_join(call):
-    user_id = call.from_user.id
-    not_joined = check_force_join(user_id)
-    
-    if not not_joined:
-        bot.answer_callback_query(call.id, "✅ Verification Successful!")
-        bot.edit_message_text(
-            chat_id=call.message.chat.id,
-            message_id=call.message.message_id,
-            text=f"<b>{pe('check')} Verification Successful!</b>\n\nYou have joined all required channels. You can now use the bot commands.",
-            parse_mode="HTML"
+def admin_keyboard():
+    markup = types.InlineKeyboardMarkup()
+    markup.row(
+        types.InlineKeyboardButton(
+            f"STATUS {get_emoji('status')}",
+            callback_data="admin_status"
+        ),
+        types.InlineKeyboardButton(
+            f"BROADCAST {get_emoji('broadcast')}",
+            callback_data="admin_broadcast"
+        )
+    )
+    return markup
+
+# --- HANDLERS ---
+@bot.message_handler(commands=['start'])
+def welcome(message):
+    if message.chat.id not in registered_users:
+        registered_users.add(message.chat.id)
+        save_users()
+
+    text = f"{get_emoji('welcome')} WELCOME TO SYMOON PREMIUM EMOJI BOT!\n\nTHIS BOT CONVERTS YOUR NORMAL EMOJI INTO PREMIUM EMOJI"
+    bot.send_message(
+        message.chat.id,
+        text,
+        entities=make_entities(text, bold=True, emoji_key="welcome"),
+        reply_markup=main_menu(message.chat.id)
+    )
+
+# --- ADMIN ---
+@bot.message_handler(func=lambda m: m.text == f"ADMIN PANEL {get_emoji('admin_panel')}" and m.chat.id == ADMIN_ID)
+def admin_panel(message):
+    text = f"{get_emoji('admin_panel')} ADMIN PANEL\n\nWelcome"
+    bot.send_message(
+        message.chat.id,
+        text,
+        entities=make_entities(text, bold=True, emoji_key="admin_panel"),
+        reply_markup=admin_keyboard()
+    )
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("admin_"))
+def admin_callback(call):
+    if call.from_user.id != ADMIN_ID:
+        return
+
+    if call.data == "admin_status":
+        total = len(registered_users)
+        bot.answer_callback_query(call.id)
+        text = f"{get_emoji('status')} BOT STATUS\n\nTotal Users: {total}"
+        bot.send_message(
+            call.message.chat.id,
+            text,
+            entities=make_entities(text, bold=True, emoji_key="status", code_words=[str(total)])
+        )
+
+    elif call.data == "admin_broadcast":
+        bot.answer_callback_query(call.id)
+        sent = bot.send_message(call.message.chat.id, "Broadcast message send karo:")
+        bot.register_next_step_handler(sent, perform_broadcast)
+
+def perform_broadcast(message):
+    success, fail = 0, 0
+    for user_id in registered_users:
+        try:
+            bot.copy_message(user_id, message.chat.id, message.message_id)
+            success += 1
+        except:
+            fail += 1
+    text = f"{get_emoji('broadcast')} BROADCAST COMPLETE\n\n{get_emoji('success')} Success: {success}\n{get_emoji('error')} Failed: {fail}"
+    bot.send_message(
+        ADMIN_ID,
+        text,
+        entities=make_entities(text, bold=True, emoji_key="broadcast", code_words=[str(success), str(fail)])
+    )
+
+# --- MAKE POST ---
+@bot.message_handler(func=lambda m: m.text == f"MAKE POST {get_emoji('make_post')}")
+def start_post(message):
+    sent = bot.send_message(message.chat.id, "SEND YOUR POST WITH NORMAL EMOJIS:")
+    bot.register_next_step_handler(sent, process_post_content)
+
+def process_post_content(message):
+    photo_id = message.photo[-1].file_id if message.content_type == 'photo' else None
+    processed_text, entities = process_text_and_entities(message)
+    temp_data[message.chat.id] = {
+        "id": generate_id(),
+        "content": processed_text,
+        "entities": entities,
+        "photo_id": photo_id
+    }
+    sent = bot.send_message(message.chat.id, "SEND THE BUTTON NAME:")
+    bot.register_next_step_handler(sent, process_button_name)
+
+def process_button_name(message):
+    temp_data[message.chat.id]["btn_name"] = message.text
+    sent = bot.send_message(message.chat.id, "SEND THE BUTTON LINK (URL):")
+    bot.register_next_step_handler(sent, process_button_link)
+
+def process_button_link(message):
+    user_id = message.chat.id
+    data = temp_data[user_id]
+    data["btn_url"] = message.text
+    posts_db[data["id"]] = data
+
+    markup = types.InlineKeyboardMarkup().add(
+        types.InlineKeyboardButton(text=data["btn_name"], url=data["btn_url"])
+    )
+
+    text = f"{get_emoji('success')} Done! ID: {data['id']}"
+    bot.send_message(
+        user_id,
+        text,
+        entities=make_entities(text, emoji_key="success", code_words=[data['id']])
+    )
+
+    if data["photo_id"]:
+        bot.send_photo(
+            user_id,
+            data["photo_id"],
+            caption=data["content"],
+            caption_entities=data["entities"],
+            reply_markup=markup
         )
     else:
-        bot.answer_callback_query(call.id, "❌ You still haven't joined all channels!")
-        channels_text = "\n".join([f"{pe('cross')} {ch['name']}" for ch in not_joined])
-        bot.edit_message_text(
-            chat_id=call.message.chat.id,
-            message_id=call.message.message_id,
-            text=f"""<b>{pe('warning')} ACCESS DENIED!</b>
-
-<b>{pe('cross')} You haven't joined:</b>
-{channels_text}
-
-<i>Please join all channels and click Try Again.</i>""",
-            parse_mode="HTML",
-            reply_markup=force_join_keyboard(not_joined)
+        bot.send_message(
+            user_id,
+            data["content"],
+            entities=data["entities"],
+            reply_markup=markup
         )
 
-# ==========================================
-# 🛡️ ADMIN CHECKER
-# ==========================================
-def is_admin(user_id):
-    return user_id in ADMIN_IDS
+# --- CHANNEL CONNECT ---
+@bot.message_handler(func=lambda m: m.text == f"CONNECT CHANNELS {get_emoji('connect_channel')}")
+def ask_channel(message):
+    sent = bot.send_message(
+        message.chat.id,
+        "FORWARD A MESSAGE FROM THE CHANNEL OR WRITE @{username} :"
+    )
+    bot.register_next_step_handler(sent, verify_channel)
 
-def admin_full_control(user_id):
-    return is_admin(user_id)
-
-# ==========================================
-# 📂 FILE MANAGERS
-# ==========================================
-def load_json(filepath, default):
-    if os.path.exists(filepath):
-        try:
-            with open(filepath, 'r') as f:
-                data = json.load(f)
-                return data if isinstance(data, type(default)) else default
-        except Exception:
-            return default
-    return default
-
-def save_json(filepath, data):
+def verify_channel(message):
+    chat_id = message.forward_from_chat.id if message.forward_from_chat else message.text
     try:
-        with open(filepath, 'w') as f:
-            json.dump(data, f, indent=4)
-    except Exception as e:
-        print(f"Error saving {filepath}: {e}")
-
-def load_vip(): return load_json(VIP_FILE, {})
-def save_vip(data): save_json(VIP_FILE, data)
-def load_groups(): return load_json(GROUPS_FILE, {})
-def save_groups(data): save_json(GROUPS_FILE, data)
-def load_all_groups(): return load_json(ALL_GROUPS_FILE, {})
-def save_all_groups(data): save_json(ALL_GROUPS_FILE, data)
-
-def load_auto_db(): 
-    default = {
-        "time": "08:57 AM", 
-        "last_run": "", 
-        "tasks": {}, 
-        "next_serial": 1,
-        "stats": {
-            "total_20_tasks": 0,
-            "total_50_tasks": 0,
-            "total_20_likes_sent": 0,
-            "total_50_likes_sent": 0
-        }
-    }
-    return load_json(AUTO_DB_FILE, default)
-
-def save_auto_db(data): save_json(AUTO_DB_FILE, data)
-
-def load_group_status(): return load_json(GROUP_STATUS_FILE, {})
-def save_group_status(data): save_json(GROUP_STATUS_FILE, data)
-
-def get_group_status(chat_id):
-    group_status = load_group_status()
-    return group_status.get(str(chat_id), True)
-
-def set_group_status(chat_id, status):
-    group_status = load_group_status()
-    group_status[str(chat_id)] = status
-    save_group_status(group_status)
-
-def is_bot_on_for_chat(chat_id):
-    if chat_id > 0:
-        return bot_is_on
-    return get_group_status(chat_id)
-
-# ==========================================
-# 🎨 PREMIUM EMOJI UI TEMPLATES
-# ==========================================
-def report_ui(data, region, status, response_time, remain_requests, likes_sent):
-    nickname = html.escape(str(data.get('PlayerNickname', 'Unknown')))
-    uid = data.get('UID', 'Unknown')
-    added = data.get('LikesGivenByAPI', 0)
-    before = data.get('LikesbeforeCommand', 0)
-    after = data.get('LikesafterCommand', 0)
-
-    if status in [1, 2]:
-        api_time = round(response_time * 0.8, 2)
-        return f"""<blockquote><b>{pe('check')} Likes Sent Successfully!</b>
-━━━━━━━━━━━━━━━━━━━━━━━
-<i>{pe('bolt')} Speed: {response_time}s</i>
-<i>{pe('clock')} API Time: {api_time}s</i>
-<b>{pe('diamond')} Likes Sent:</b> <code>{likes_sent}</code>
-
-<b>{pe('user')} Account:</b> <code>{nickname}</code>
-<b>{pe('id')} UID:</b> <code>{uid}</code>
-<b>{pe('globe')} Region:</b> <code>{region.upper()}</code>
-
-<b>{pe('chart_up')} Before:</b> <code>{before}</code>
-<b>{pe('heart')} Likes Added:</b> <code>{added}</code>
-<b>{pe('chart_down')} After:</b> <code>{after}</code>
-
-<i>{pe('diamond')} Your Remaining: {remain_requests}</i></blockquote>"""
-    else:
-        return f"""<blockquote><b>{pe('cross')} Failed to process.</b>
-━━━━━━━━━━━━━━━━━━━━━━━
-<i>{pe('warning')} Reason: Target reached max or invalid.</i>
-<b>{pe('chart_down')} Before:</b> <code>{before}</code>
-<b>{pe('chart_up')} After:</b> <code>{after}</code>
-<i>{pe('bolt')} Speed: {response_time}s</i></blockquote>"""
-
-def auto_report_ui(success, package, speed, nickname, uid, region, before, added, after, serial, reason="ALREADY MAX"):
-    if success:
-        return f"""<blockquote><b>{pe('check')} Auto Likes Sent Successfully! {pe('bolt')}</b>
-━━━━━━━━━━━━━━━━━━━━━━━
-{pe('card')} Auto Like : {package} Likes
-{pe('bolt')} Speed: {speed}s
-
-{pe('user')} Account: {nickname}
-{pe('id')} UID: {uid}
-{pe('globe')} Region: {region.upper()}
-
-{pe('chart_up')} Before: {before}
-{pe('heart')} Likes Added: {added}
-{pe('chart_down')} After: {after}
-
-{pe('graduate')} TASK NO : {serial}</blockquote>"""
-    else:
-        return f"""<blockquote><b>{pe('cross')} Auto Likes Sent Failed ! {pe('bolt')} {{ {reason} }} ❗️</b>
-━━━━━━━━━━━━━━━━━━━━━━━
-{pe('card')} Auto Like : {package} Likes
-{pe('bolt')} Speed: {speed}s
-
-{pe('user')} Account: {nickname}
-{pe('id')} UID: {uid}
-{pe('globe')} Region: {region.upper()}
-
-{pe('chart_up')} Before: {before}
-{pe('heart')} Likes Added: {added}
-{pe('chart_down')} After: {after}
-
-{pe('graduate')} TASK NO : {serial}</blockquote>"""
-
-def error_ui(title, message):
-    return f"<b>{pe('warning')} {title}</b>\n{pe('cross')} {message}"
-
-def info_ui(title, message):
-    return f"<b>{pe('info')} {title}</b>\n{pe('diamond2')} {message}"
-
-# ==========================================
-# 🤖 BOT GROUP TRACKING
-# ==========================================
-@bot.message_handler(content_types=['new_chat_members'])
-def on_bot_added(message):
-    for member in message.new_chat_members:
-        if member.id == bot.get_me().id:
-            chat_id = str(message.chat.id)
-            chat_title = message.chat.title or "Unknown Group"
-            all_groups = load_all_groups()
-            all_groups[chat_id] = {
-                "title": chat_title,
-                "added_date": time.time(),
-                "status": get_group_status(message.chat.id)
-            }
-            save_all_groups(all_groups)
-            groups = load_groups()
-            groups[chat_id] = "unlimited"
-            save_groups(groups)
-
-@bot.message_handler(content_types=['left_chat_member'])
-def on_bot_removed(message):
-    if message.left_chat_member.id == bot.get_me().id:
-        chat_id = str(message.chat.id)
-        all_groups = load_all_groups()
-        if chat_id in all_groups:
-            del all_groups[chat_id]
-            save_all_groups(all_groups)
-        groups = load_groups()
-        if chat_id in groups:
-            del groups[chat_id]
-            save_groups(groups)
-
-# ==========================================
-# 👑 ADMIN COMMAND
-# ==========================================
-@bot.message_handler(commands=['admin'])
-def handle_admin_command(message):
-    if not is_admin(message.from_user.id):
-        bot.reply_to(message, f"{pe('cross')} You are not authorized!", parse_mode="HTML")
-        return
-    
-    args = message.text.split()
-    
-    if len(args) == 3 and args[1].lower() == 'add':
-        try:
-            new_admin_id = int(args[2])
-            if new_admin_id in ADMIN_IDS:
-                bot.reply_to(message, f"{pe('cross')} User already admin!", parse_mode="HTML")
-                return
-            ADMIN_IDS.append(new_admin_id)
-            save_admin_ids(ADMIN_IDS)
-            bot.reply_to(message, f"{pe('check')} **New Admin Added!**\n{pe('crown')} ID: `{new_admin_id}`", parse_mode="HTML")
-        except:
-            bot.reply_to(message, f"{pe('cross')} Invalid ID!", parse_mode="HTML")
-    
-    elif len(args) == 3 and args[1].lower() == 'remove':
-        try:
-            rid = int(args[2])
-            if rid == 7603719412:
-                bot.reply_to(message, f"{pe('cross')} Cannot remove master!", parse_mode="HTML")
-                return
-            if rid in ADMIN_IDS:
-                ADMIN_IDS.remove(rid)
-                save_admin_ids(ADMIN_IDS)
-                bot.reply_to(message, f"{pe('check')} Admin Removed: `{rid}`", parse_mode="HTML")
-        except:
-            bot.reply_to(message, f"{pe('cross')} Invalid ID!", parse_mode="HTML")
-    
-    elif len(args) == 2 and args[1].lower() == 'list':
-        admin_list = ""
-        for idx, aid in enumerate(ADMIN_IDS, 1):
-            master = f" {pe('crown')} MASTER" if aid == 7603719412 else ""
-            admin_list += f"{idx}. `{aid}`{master}\n"
-        bot.reply_to(message, f"<b>{pe('crown')} ADMIN LIST</b>\n{pe('chart')} Total: {len(ADMIN_IDS)}\n{admin_list}", parse_mode="HTML")
-
-# ==========================================
-# 🔧 LIMIT COMMAND
-# ==========================================
-@bot.message_handler(commands=['limit'])
-def handle_limit_command(message):
-    if not admin_full_control(message.from_user.id):
-        return
-    args = message.text.split()
-    if len(args) != 2:
-        bot.reply_to(message, f"{pe('warning')} Usage: /limit number", parse_mode="HTML")
-        return
-    try:
-        global USER_LIMIT
-        USER_LIMIT = max(1, int(args[1]))
-        bot.reply_to(message, f"{pe('check')} Limit set to: {USER_LIMIT}", parse_mode="HTML")
+        member = bot.get_chat_member(chat_id, bot.get_me().id)
+        if member.status in ['administrator', 'creator']:
+            chat_info = bot.get_chat(chat_id)
+            if message.chat.id not in user_channels:
+                user_channels[message.chat.id] = []
+            user_channels[message.chat.id].append({
+                "id": chat_info.id,
+                "title": chat_info.title
+            })
+            text = f"{get_emoji('success')} Connected: {chat_info.title}"
+            bot.send_message(
+                message.chat.id,
+                text,
+                entities=make_entities(text, emoji_key="success")
+            )
+        else:
+            text = f"{get_emoji('error')} Bot ke admin banao age!"
+            bot.send_message(
+                message.chat.id,
+                text,
+                entities=make_entities(text, emoji_key="error")
+            )
     except:
-        bot.reply_to(message, f"{pe('cross')} Invalid number!", parse_mode="HTML")
+        text = f"{get_emoji('error')} CHANNEL NOT FOUND"
+        bot.send_message(
+            message.chat.id,
+            text,
+            entities=make_entities(text, emoji_key="error")
+        )
 
-# ==========================================
-# 📊 GROUP LIST
-# ==========================================
-@bot.message_handler(commands=['glist'])
-def handle_glist_command(message):
-    if not admin_full_control(message.from_user.id):
+# --- SEND TO CHANNEL ---
+@bot.message_handler(func=lambda m: m.text == f"SEND TO CHANNEL {get_emoji('send_channel')}")
+def ask_post_id(message):
+    sent = bot.send_message(message.chat.id, "Enter Post ID:")
+    bot.register_next_step_handler(sent, select_channel)
+
+def select_channel(message):
+    post_id = message.text.upper()
+    if post_id not in posts_db or message.chat.id not in user_channels:
+        text = f"{get_emoji('error')} ID vul!  channel e connect nai."
+        bot.send_message(
+            message.chat.id,
+            text,
+            entities=make_entities(text, emoji_key="error")
+        )
         return
-    all_groups = load_all_groups()
-    if not all_groups:
-        bot.reply_to(message, f"{pe('empty')} No groups found!", parse_mode="HTML")
-        return
-    
-    on_count = sum(1 for g in all_groups if all_groups[g].get('status', True))
-    off_count = len(all_groups) - on_count
-    
-    text = f"<b>{pe('chart')} ALL GROUPS</b>\n{pe('pin')} Total: {len(all_groups)}\n"
-    text += f"{pe('green_circle')} ON: {on_count} | {pe('red_circle')} OFF: {off_count}\n\n"
-    
-    for idx, (cid, data) in enumerate(all_groups.items(), 1):
-        is_on = get_group_status(int(cid))
-        status = pe('green_circle') if is_on else pe('red_circle')
-        text += f"{idx}. <b>{data.get('title', 'Unknown')}</b>\n   {status} | ID: <code>{cid}</code>\n\n"
-    
-    bot.reply_to(message, text, parse_mode="HTML")
+    markup = types.InlineKeyboardMarkup()
+    for chan in user_channels[message.chat.id]:
+        markup.add(types.InlineKeyboardButton(
+            text=chan["title"],
+            callback_data=f"send_{post_id}_{chan['id']}"
+        ))
+    bot.send_message(message.chat.id, "Konsa channel?", reply_markup=markup)
 
-# ==========================================
-# ON/OFF COMMANDS
-# ==========================================
-@bot.message_handler(commands=['p0', 'p02', 'remainreset'])
-def handle_admin_commands(message):
-    global bot_is_on, user_usage
-    if not admin_full_control(message.from_user.id): 
-        return
-    
-    cmd = message.text.split()[0].lower()
-    chat_id = message.chat.id
-    
-    if cmd == '/p0':
-        if chat_id < 0:
-            set_group_status(chat_id, True)
-            bot.reply_to(message, f"{pe('check')} Bot ON for this group!", parse_mode="HTML")
-        else:
-            bot_is_on = True
-            bot.reply_to(message, f"{pe('check')} Bot ON globally!", parse_mode="HTML")
-    elif cmd == '/p02':
-        if chat_id < 0:
-            set_group_status(chat_id, False)
-            bot.reply_to(message, f"{pe('cross')} Bot OFF for this group!", parse_mode="HTML")
-        else:
-            bot_is_on = False
-            bot.reply_to(message, f"{pe('cross')} Bot OFF globally!", parse_mode="HTML")
-    elif cmd == '/remainreset':
-        user_usage.clear()
-        bot.reply_to(message, f"{pe('check')} User limits reset!", parse_mode="HTML")
-
-# ==========================================
-# 🎯 LIKE COMMAND
-# ==========================================
-@bot.message_handler(commands=['like'])
-def handle_like(message):
-    global user_usage
-    user_id = message.from_user.id
-    user_name = message.from_user.first_name
-    chat_id = message.chat.id
-    vips = load_vip()
-    is_vip = str(user_id) in vips
-
-    if not is_admin(user_id):
-        not_joined = check_force_join(user_id)
-        if not_joined:
-            channels_text = "\n".join([f"{pe('cross')} {ch['name']}" for ch in not_joined])
-            bot.reply_to(message, f"""<b>{pe('warning')} ACCESS DENIED!</b>
-
-<b>{pe('user')} Hello {user_name}!</b>
-You must join our channels first.
-
-<b>{pe('cross')} Not joined:</b>
-{channels_text}""", parse_mode="HTML", reply_markup=force_join_keyboard(not_joined))
-            return
-
-        if not is_bot_on_for_chat(chat_id):
-            bot.reply_to(message, f"{pe('cross')} Bot is OFF for this group!", parse_mode="HTML")
-            return
-
-        if is_vip:
-            if user_usage.get(user_id, 0) >= vips[str(user_id)]['limit']:
-                bot.reply_to(message, f"{pe('cross')} VIP limit reached!", parse_mode="HTML")
-                return
-        else:
-            if user_usage.get(user_id, 0) >= USER_LIMIT:
-                bot.reply_to(message, f"{pe('cross')} Daily limit reached!", parse_mode="HTML")
-                return
-
-    args = message.text.split()
-    if len(args) != 3:
-        bot.reply_to(message, f"{pe('warning')} Use: /like region uid", parse_mode="HTML")
-        return
-
-    region = args[1].upper()
-    uid = args[2]
-
-    if region not in ALLOWED_REGIONS:
-        bot.reply_to(message, f"{pe('cross')} Invalid region!", parse_mode="HTML")
-        return
-
-    process_like_request(message, region, uid, user_id, user_name, 50)
-
-def process_like_request(message, region, uid, user_id, user_name, likes_count=50):
-    global user_usage
-    wait_msg = bot.reply_to(message, f"{pe('rocket')} Processing... {pe('rocket')}", parse_mode="HTML")
-
-    try:
-        start_time = time.time()
-        url = f"{API_50_URL}/like?api_key={API_50_KEY}&server_name={region.lower()}&uid={uid}"
-        response = requests.get(url, timeout=45)
-        data = response.json()
-        response_time = round(time.time() - start_time, 2)
-        status = data.get('status')
-
-        if status in [1, 2]:
-            if not is_admin(user_id):
-                user_usage[user_id] = user_usage.get(user_id, 0) + 1
-            vips = load_vip()
-            remain = "♾️" if is_admin(user_id) else (vips[str(user_id)]['limit'] - user_usage.get(user_id, 0) if str(user_id) in vips else USER_LIMIT - user_usage.get(user_id, 0))
-            bot.edit_message_text(chat_id=message.chat.id, message_id=wait_msg.message_id, text=report_ui(data, region, status, response_time, remain, likes_count), parse_mode="HTML")
-        else:
-            bot.edit_message_text(chat_id=message.chat.id, message_id=wait_msg.message_id, text=f"{pe('cross')} Failed to process UID.", parse_mode="HTML")
-
-    except Exception as e:
-        bot.edit_message_text(chat_id=message.chat.id, message_id=wait_msg.message_id, text=f"{pe('cross')} Error: {str(e)[:50]}", parse_mode="HTML")
-
-# ==========================================
-# 🚀 AUTO TASK COMMANDS
-# ==========================================
-@bot.message_handler(commands=['autotime'])
-def handle_autotime(message):
-    if not admin_full_control(message.from_user.id): return
-    args = message.text.split(maxsplit=1)
-    if len(args) != 2:
-        bot.reply_to(message, f"{pe('warning')} Usage: /autotime HH:MM AM/PM", parse_mode="HTML")
-        return
-    db = load_auto_db()
-    db['time'] = args[1].upper()
-    save_auto_db(db)
-    bot.reply_to(message, f"{pe('check')} Auto time set: {args[1].upper()}", parse_mode="HTML")
-
-@bot.message_handler(commands=['likeauto'])
-def handle_likeauto(message):
-    if not admin_full_control(message.from_user.id): return
-    args = message.text.split()
-    if len(args) != 5:
-        bot.reply_to(message, f"{pe('warning')} Usage: /likeauto region uid 20/50 days", parse_mode="HTML")
-        return
-
-    region, uid, pkg, dys = args[1].upper(), args[2], args[3], args[4]
-    if region not in ALLOWED_REGIONS:
-        bot.reply_to(message, f"{pe('cross')} Invalid region!", parse_mode="HTML")
-        return
-    if pkg not in ['20', '50']:
-        bot.reply_to(message, f"{pe('cross')} Package: 20 or 50", parse_mode="HTML")
-        return
-
-    try:
-        package, days = int(pkg), int(dys)
-        total_likes = package * days
-    except:
-        bot.reply_to(message, f"{pe('cross')} Numbers only!", parse_mode="HTML")
-        return
-
-    db = load_auto_db()
-    serial = str(db['next_serial']).zfill(4)
-    db['next_serial'] += 1
-    
-    if package == 20: db['stats']['total_20_tasks'] = db['stats'].get('total_20_tasks', 0) + 1
-    else: db['stats']['total_50_tasks'] = db['stats'].get('total_50_tasks', 0) + 1
-
-    db['tasks'][serial] = {
-        "chat_id": message.chat.id, "region": region, "uid": uid,
-        "package": package, "total_target": total_likes, "sent": 0,
-        "remain": total_likes, "days": days, "days_completed": 0,
-        "nickname": "Waiting...", "created_at": time.time(), "status": "active"
-    }
-    save_auto_db(db)
-    bot.reply_to(message, f"{pe('check')} Task Added!\n{pe('graduate')} Task: {serial}\n{pe('id')} UID: {uid}\n{pe('card')} {package} Likes x {days} Days", parse_mode="HTML")
-
-@bot.message_handler(commands=['autoremove'])
-def handle_autoremove(message):
-    if not admin_full_control(message.from_user.id): return
-    args = message.text.split()
-    if len(args) != 2:
-        bot.reply_to(message, f"{pe('warning')} Usage: /autoremove uid", parse_mode="HTML")
-        return
-    
-    param = args[1]
-    db = load_auto_db()
-    tasks = db.get('tasks', {})
-    removed = []
-    
-    if param.startswith('task_'):
-        serial = param.replace('task_', '')
-        if serial in tasks:
-            removed.append((serial, tasks.pop(serial)))
-    else:
-        for s, t in list(tasks.items()):
-            if t['uid'] == param:
-                removed.append((s, tasks.pop(s)))
-    
-    if removed:
-        save_auto_db(db)
-        bot.reply_to(message, f"{pe('check')} Removed {len(removed)} task(s)", parse_mode="HTML")
-    else:
-        bot.reply_to(message, f"{pe('cross')} Not found!", parse_mode="HTML")
-
-@bot.message_handler(commands=['listauto'])
-def handle_listauto(message):
-    if not admin_full_control(message.from_user.id): return
-    db = load_auto_db()
-    tasks = db.get('tasks', {})
-    if not tasks:
-        bot.reply_to(message, f"{pe('empty')} No tasks!", parse_mode="HTML")
-        return
-    
-    text = f"<b>{pe('chart')} AUTO TASKS</b>\n{pe('clock')} Next: {db.get('time', 'N/A')}\n\n"
-    for serial, data in tasks.items():
-        progress = int((data['sent'] / data['total_target']) * 100) if data['total_target'] > 0 else 0
-        text += f"""{pe('graduate')} <b>TASK {serial}</b>
-{pe('user')} {data.get('nickname', '?')}
-{pe('id')} {data['uid']} | {data['region']}
-{pe('card')} {data['package']} Likes | {pe('chart_up')} {progress}%
-{pe('chart')} {data['sent']}/{data['total_target']}
-{pe('hourglass')} {data['days'] - data['days_completed']} days left
-
-"""
-    bot.reply_to(message, text, parse_mode="HTML")
-
-# ==========================================
-# 🎯 VIP COMMANDS
-# ==========================================
-@bot.message_handler(commands=['vipadd', 'removevip', 'listvip', 'allow', 'disallow', 'remains'])
-def handle_vip_group_commands(message):
-    cmd = message.text.split()[0].lower()
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    if cmd == '/remains':
-        if not is_admin(user_id):
-            if not is_bot_on_for_chat(chat_id):
-                bot.reply_to(message, f"{pe('cross')} Bot OFF!", parse_mode="HTML")
-                return
-            not_joined = check_force_join(user_id)
-            if not_joined:
-                bot.reply_to(message, f"{pe('warning')} Join channels first!", parse_mode="HTML", reply_markup=force_join_keyboard(not_joined))
-                return
-        
-        vips = load_vip()
-        if is_admin(user_id):
-            uses = "♾️ Admin"
-        elif str(user_id) in vips:
-            uses = f"{vips[str(user_id)]['limit'] - user_usage.get(user_id, 0)}/{vips[str(user_id)]['limit']} VIP"
-        else:
-            uses = f"{USER_LIMIT - user_usage.get(user_id, 0)}/{USER_LIMIT}"
-        bot.reply_to(message, f"{pe('user')} Your Limit: {uses}", parse_mode="HTML")
-        return
-
-    if not admin_full_control(user_id): return
-    args = message.text.split()
-
-    if cmd == '/vipadd' and len(args) == 3:
-        vips = load_vip()
-        vips[args[1]] = {"name": f"User {args[1]}", "limit": int(args[2])}
-        save_vip(vips)
-        bot.reply_to(message, f"{pe('check')} VIP Added: {args[1]}", parse_mode="HTML")
-    elif cmd == '/removevip':
-        vips = load_vip()
-        if len(args) == 2 and args[1] in vips:
-            del vips[args[1]]
-            save_vip(vips)
-        bot.reply_to(message, f"{pe('ban')} VIP Removed", parse_mode="HTML")
-    elif cmd == '/listvip':
-        vips = load_vip()
-        text = f"<b>{pe('star')} VIP LIST</b>\n"
-        for uid, data in vips.items():
-            text += f"{pe('user')} {uid}: {data['limit']}\n"
-        bot.reply_to(message, text or f"{pe('empty')} No VIPs", parse_mode="HTML")
-    elif cmd == '/allow':
-        groups = load_groups()
-        groups[str(message.chat.id)] = "unlimited"
-        save_groups(groups)
-        bot.reply_to(message, f"{pe('check')} Group allowed!", parse_mode="HTML")
-    elif cmd == '/disallow':
-        groups = load_groups()
-        cid = str(message.chat.id)
-        if cid in groups:
-            del groups[cid]
-            save_groups(groups)
-        bot.reply_to(message, f"{pe('ban')} Group disallowed!", parse_mode="HTML")
-
-# ==========================================
-# ⏰ CRON JOB
-# ==========================================
-def execute_auto_tasks():
-    db = load_auto_db()
-    tasks = db.get("tasks", {})
-    if not tasks: return
-
-    for serial, task in list(tasks.items()):
-        if task.get('status') == 'paused': continue
-            
-        uid, region, package, chat_id = task['uid'], task['region'], task['package'], task['chat_id']
-        
-        if package == 20:
-            url = f"{API_20_URL}/like?uid={uid}&server_name={region.lower()}&key={API_20_KEY}"
-        else:
-            url = f"{API_50_URL}/like?api_key={API_50_KEY}&server_name={region.lower()}&uid={uid}"
-        
+@bot.callback_query_handler(func=lambda call: call.data.startswith("send_"))
+def perform_send(call):
+    parts = call.data.split("_")
+    pid = parts[1]
+    cid = parts[2]
+    data = posts_db.get(pid)
+    if data:
+        markup = types.InlineKeyboardMarkup().add(
+            types.InlineKeyboardButton(text=data["btn_name"], url=data["btn_url"])
+        )
         try:
-            start_time = time.time()
-            response = requests.get(url, timeout=45)
-            res_data = response.json()
-            response_time = round(time.time() - start_time, 2)
-            
-            status = res_data.get('status')
-            nickname = html.escape(str(res_data.get('PlayerNickname', 'Unknown')))
-            added = res_data.get('LikesGivenByAPI', 0)
-            before = res_data.get('LikesbeforeCommand', 0)
-            after = res_data.get('LikesafterCommand', 0)
-            
-            if status in [1, 2]:
-                task['sent'] += added
-                task['remain'] -= added
-                task['nickname'] = nickname
-                
-                if package == 20:
-                    db['stats']['total_20_likes_sent'] = db['stats'].get('total_20_likes_sent', 0) + added
-                else:
-                    db['stats']['total_50_likes_sent'] = db['stats'].get('total_50_likes_sent', 0) + added
-                
-                msg = auto_report_ui(True, package, response_time, nickname, uid, region, before, added, after, serial)
-                
-                try: bot.send_message(chat_id, msg, parse_mode="HTML")
-                except: pass
-                
-                all_groups = load_all_groups()
-                for gid in all_groups:
-                    if str(gid) != str(chat_id) and is_bot_on_for_chat(int(gid)):
-                        try: bot.send_message(int(gid), msg, parse_mode="HTML")
-                        except: pass
+            if data["photo_id"]:
+                bot.send_photo(
+                    cid,
+                    data["photo_id"],
+                    caption=data["content"],
+                    caption_entities=data["entities"],
+                    reply_markup=markup
+                )
             else:
-                msg = auto_report_ui(False, package, response_time, nickname, uid, region, before, 0, after, serial)
-                try: bot.send_message(chat_id, msg, parse_mode="HTML")
-                except: pass
-
+                bot.send_message(
+                    cid,
+                    data["content"],
+                    entities=data["entities"],
+                    reply_markup=markup
+                )
+            text = f"{get_emoji('success')} Sent successfully!"
+            bot.edit_message_text(
+                text,
+                call.message.chat.id,
+                call.message.message_id,
+                entities=make_entities(text, emoji_key="success")
+            )
         except Exception as e:
-            print(f"Task {serial} Error: {e}")
+            bot.answer_callback_query(call.id, f"Error: {e}", show_alert=True)
 
-        save_auto_db(db)
-        
-        if task.get('remain', 0) <= 0:
-            db = load_auto_db()
-            if serial in db.get('tasks', {}):
-                del db['tasks'][serial]
-                save_auto_db(db)
-        
-        time.sleep(10)
-
-def cron_worker():
-    tz = pytz.timezone('Asia/Dhaka')
-    while True:
-        try:
-            now = datetime.datetime.now(tz)
-            db = load_auto_db()
-            target_time = db.get("time", "04:30 AM")
-            last_run = db.get("last_run", "")
-            current_time_str = now.strftime("%I:%M %p")
-            current_date_str = now.strftime("%Y-%m-%d")
-            
-            if current_time_str == target_time and last_run != current_date_str:
-                db['last_run'] = current_date_str
-                save_auto_db(db)
-                execute_auto_tasks()
-        except Exception as e:
-            print(f"Cron Error: {e}")
-        time.sleep(30)
-
-if __name__ == "__main__":
-    print(f"{pe('rocket')} Premium Bot with Real Animated Emojis Starting...")
-    print(f"{pe('crown')} Master Admin: 7603719412")
-    
-    cron_thread = threading.Thread(target=cron_worker, daemon=True)
-    cron_thread.start()
-    
-    while True:
-        try:
-            bot.polling(none_stop=True, timeout=60)
-        except Exception as e:
-            print(f"Bot crashed, restarting... Error: {e}")
-            time.sleep(5)
+print(f"{get_emoji('bot_active')} Bot is active...")
+bot.infinity_polling()
